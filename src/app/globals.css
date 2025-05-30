@@ -70,15 +70,15 @@
 /* Marquee animation styles */
 .marquee-container {
   display: flex;
-  width: 200%;
+  width: 200%; /* Ensures enough width for two marquees */
   overflow: hidden;
+  position: relative;
 }
 
 .marquee-content {
-  display: flex;
-  animation: marquee 30s linear infinite;
-  width: 100%;
+  flex-shrink: 0;
   white-space: nowrap;
+  animation: marquee 30s linear infinite;
 }
 
 @keyframes marquee {
