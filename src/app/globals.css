@@ -1,0 +1,162 @@
+@import "tailwindcss";
+@import "locomotive-scroll/dist/locomotive-scroll.css";
+
+@keyframes fadeinup {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeinup {
+  animation: fadeinup 1.2s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Main background styling */
+.portfolio-main-bg {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #18181b;
+  transition: background-image 1s cubic-bezier(.4, 0, .2, 1);
+}
+
+.portfolio-main-bg-revealed {
+  background-image: url('/pic.jpg');
+}
+
+/* Text animation */
+.animate-text {
+  will-change: transform;
+}
+
+.animate-fadeinup {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* SVG Shutter styles */
+.shutter-overlay {
+  transition: none;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.shutter-svg {
+  display: block;
+  z-index: 100;
+}
+
+.shutter-animate #shutterPath {
+  transition: d 3s cubic-bezier(.77, 0, .18, 1); /* Increased from 3s to 5s for slower animation */
+}
+
+/* Marquee animation styles */
+.marquee-container {
+  display: flex;
+  width: 200%;
+  overflow: hidden;
+}
+
+.marquee-content {
+  display: flex;
+  animation: marquee 30s linear infinite;
+  width: 100%;
+  white-space: nowrap;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Locomotive Scroll styles */
+html.has-scroll-smooth {
+  overflow: hidden;
+}
+
+html.has-scroll-dragging {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.has-scroll-smooth body {
+  overflow: hidden;
+}
+
+.has-scroll-smooth [data-scroll-container] {
+  min-height: 100vh;
+}
+
+[data-scroll-direction="horizontal"] [data-scroll-container] {
+  height: 100vh;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+[data-scroll-direction="horizontal"] [data-scroll-section] {
+  display: inline-block;
+  vertical-align: top;
+  white-space: nowrap;
+  height: 100%;
+}
+
+.c-scrollbar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 11px;
+  height: 100%;
+  transform-origin: center right;
+  transition: transform 0.3s, opacity 0.3s;
+  opacity: 0;
+}
+
+.c-scrollbar:hover {
+  transform: scaleX(1.45);
+}
+
+.c-scrollbar:hover, .has-scroll-dragging .c-scrollbar, .has-scroll-scrolling .c-scrollbar {
+  opacity: 1;
+}
+
+.c-scrollbar_thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ffffff;
+  opacity: 0.5;
+  width: 7px;
+  border-radius: 10px;
+  margin: 2px;
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.has-scroll-dragging .c-scrollbar_thumb {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
