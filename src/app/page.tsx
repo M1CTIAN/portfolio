@@ -98,10 +98,10 @@ export default function Page() {
             {/* Text that moves with shutter */}
             <div
                 className={`
-          fixed z-101
-          transition-transform duration-[4500ms]
-          ${reveal ? "translate-y-[-100vh]" : ""}
-        `}
+                fixed z-101
+                transition-transform duration-[4500ms]
+                ${reveal ? "translate-y-[-100vh]" : ""}
+                `}
                 style={{
                     top: '50vh', left: '50vw',
                     transform: reveal
@@ -109,6 +109,7 @@ export default function Page() {
                         : 'translate(-50%, -50%)'
                 }}
             >
+
                 <h1 className="text-5xl md:text-7xl font-extrabold text-[#d1d5db] drop-shadow-xl animate-fadeinup">
                     Crafting <span className="text-[#f3f4f6]">Digital Magic</span>
                 </h1>
@@ -141,6 +142,19 @@ export default function Page() {
           ${reveal ? "translate-y-0" : "translate-y-[100vh]"}
         `}
             >
+                {/* Navigation Header */}
+                <nav className="fixed top-0 left-0 w-full z-30 bg-gray-100/80 backdrop-blur-sm">
+                    <div className="flex justify-between items-center px-8 py-6">
+                        <div className="text-sm font-medium text-gray-900">
+                            © Code by Arpit
+                        </div>
+                        <div className="flex gap-8">
+                            <a href="#work" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">Work</a>
+                            <a href="#about" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">About</a>
+                            <a href="#contact" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">Contact</a>
+                        </div>
+                    </div>
+                </nav>
 
                 {/* Main Content Area - Typography Focus */}
                 <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-100">
