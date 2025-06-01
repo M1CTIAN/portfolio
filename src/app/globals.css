@@ -14,20 +14,7 @@
 }
 
 .animate-fadeinup {
-  animation: fadeinup 1.2s cubic-bezier(.4, 0, .2, 1);
-}
-
-/* Main background styling */
-.portfolio-main-bg {
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #18181b;
-  transition: background-image 1s cubic-bezier(.4, 0, .2, 1);
-}
-
-.portfolio-main-bg-revealed {
-  background-image: url('/pic.jpg');
+  animation: fadeinup 1.2s cubic-bezier(.0, 0, .0, 1);
 }
 
 /* Text animation */
@@ -58,36 +45,40 @@
   pointer-events: none;
 }
 
+.shutter-overlay.shutter-animate {
+  transform: translateY(-100%);      /* move fully off‐screen */
+}
+
 .shutter-svg {
   display: block;
   z-index: 100;
 }
 
 .shutter-animate #shutterPath {
-  transition: d 3s cubic-bezier(.77, 0, .18, 1); /* Increased from 3s to 5s for slower animation */
+  transition: d 3s cubic-bezier(.5, 0, .28, 1); /* Increased from 3s to 5s for slower animation */
 }
 
 /* Marquee animation styles */
 .marquee-container {
-  display: flex;
-  width: 200%; /* Ensures enough width for two marquees */
   overflow: hidden;
   position: relative;
 }
 
 .marquee-content {
-  flex-shrink: 0;
+  display: flex;
   white-space: nowrap;
-  animation: marquee 30s linear infinite;
+  /* no translate in base state */
+  transform: translateX(0);
+  animation: marquee-move var(--speed, 20s) linear infinite;
 }
 
-@keyframes marquee {
+@keyframes marquee-move {
   0% {
     transform: translateX(0);
   }
 
   100% {
-    transform: translateX(-100%);
+    transform: translateX(-81%);
   }
 }
 
@@ -139,7 +130,9 @@ html.has-scroll-dragging {
   transform: scaleX(1.45);
 }
 
-.c-scrollbar:hover, .has-scroll-dragging .c-scrollbar, .has-scroll-scrolling .c-scrollbar {
+.c-scrollbar:hover,
+.has-scroll-dragging .c-scrollbar,
+.has-scroll-scrolling .c-scrollbar {
   opacity: 1;
 }
 
