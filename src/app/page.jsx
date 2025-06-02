@@ -20,21 +20,21 @@ const projects = [
 
 export default function Page() {
     const [reveal, setReveal] = useState(false);
-    const [scrollDisabled, setScrollDisabled] = useState(true);
+    const [,setScrollDisabled] = useState(true);
 
     useEffect(() => {
         // Store original scroll position
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
         // More comprehensive scroll prevention
-        const preventScroll = (e: Event) => {
+        const preventScroll = (e) => {
             e.preventDefault();
             e.stopPropagation();
             e.stopImmediatePropagation();
             return false;
         };
 
-        const preventKeyboardScroll = (e: KeyboardEvent) => {
+        const preventKeyboardScroll = (e) => {
             const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // spacebar, page up/down, end, home, arrow keys
             if (keys.includes(e.keyCode)) {
                 e.preventDefault();
