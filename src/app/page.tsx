@@ -1,5 +1,22 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+const projects = [
+    {
+        title: "Project One",
+        description: "Description for project one.",
+        image: "./p1.png",
+        tags: ["HTML", "CSS", "JavaScript"],
+    },
+    {
+        title: "Project Two",
+        description: "Description for project two.",
+        image: "https://via.placeholder.com/800x600",
+        tags: ["React", "TypeScript", "Node.js"],
+    },
+    // Add more projects as needed
+];
 
 export default function Page() {
     const [reveal, setReveal] = useState(false);
@@ -69,7 +86,7 @@ export default function Page() {
             window.removeEventListener('keydown', preventKeyboardScroll);
             document.removeEventListener('touchstart', preventScroll);
             document.removeEventListener('touchend', preventScroll);
-        }, 4000);
+        }, 3800);
 
         return () => {
             clearTimeout(timer);
@@ -132,9 +149,6 @@ export default function Page() {
                     />
                 </svg>
             </div>
-            {/* ———————————————————————————————— */}
-
-            {/* Now your transformed content wrapper */}
             <div
                 className={`
           relative w-full min-h-screen
@@ -170,29 +184,23 @@ export default function Page() {
                     {/* Central Typography Layout */}
                     <div className="relative z-20 text-center">
                         {/* Main Name Typography */}
-                        <div className="mb-8">
+                        <div className="mb-8 flex space-x-1">
                             <h1 className="text-[20vw] md:text-[15vw] lg:text-[12vw] font-black text-gray-900 leading-none tracking-tight">
                                 Arpit
                             </h1>
-                            <h2 className="text-[20vw] md:text-[15vw] lg:text-[12vw] font-black text-gray-300 leading-none tracking-tight -mt-4">
+                            <h1 className="text-[20vw] md:text-[15vw] lg:text-[12vw] font-black text-gray-400 leading-none tracking-tight">
                                 Raj
-                            </h2>
+                            </h1>
                         </div>
 
                         {/* Subtitle */}
                         <div className="max-w-md mx-auto">
                             <p className="text-lg text-gray-600 font-light tracking-wide">
-                                Creative Developer specializing in modern web experiences
+                                Creating modern web experiences
                             </p>
                         </div>
                     </div>
-
-
                 </div>
-
-
-
-
                 <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
                     <div className="marquee-container">
                         <div className="marquee-content">
@@ -203,9 +211,42 @@ export default function Page() {
             </div>
 
             {/* Next Section */}
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <h2 className="text-3xl text-gray-900">Next Section</h2>
-            </div>
+            <motion.section
+                className="pb-20"
+                id="work"
+                initial={{ opacity: 0, y: 80 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                viewport={{ once: true, amount: 0.3 }}
+            >
+                {projects.map((project, i) => (
+                    <div key={i} className={`flex items-center min-h-screen ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
+                        <div className="w-1/3 p-16">
+                            <span className="text-sm text-gray-500">0{i + 1}</span>
+                            <h3 className="text-5xl font-black mb-6">{project.title}</h3>
+                            <p className="text-xl text-gray-600 mb-8">{project.description}</p>
+                            <div className="flex gap-4 mb-8">
+                                {project.tags.map(tag => (
+                                    <span key={tag} className="border border-gray-300 px-4 py-2 text-sm">{tag}</span>
+                                ))}
+                            </div>
+                            <button className="bg-black text-white px-8 py-3 hover:bg-gray-800">
+                                View Project →
+                            </button>
+                        </div>
+                        <div className="w-2/3 relative">
+                            <img src={project.image} className="w-full h-screen object-cover" />
+                            {/* Gradient overlay that blends into background */}
+                            <div
+                                className={`absolute inset-0 pointer-events-none ${i % 2 === 0
+                                    ? 'bg-gradient-to-l from-transparent via-gray-100/30 to-gray-100'
+                                    : 'bg-gradient-to-r from-transparent via-gray-100/30 to-gray-100'
+                                    }`}
+                            />
+                        </div>
+                    </div>
+                ))}
+            </motion.section>
         </main>
     );
 }
