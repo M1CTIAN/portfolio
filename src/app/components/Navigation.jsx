@@ -6,12 +6,15 @@ const Navigation = () => {
   const mainNavRef = useRef(null);
 
   useEffect(() => {
+    // Only run on client
+    if (typeof window === "undefined") return;
+
     const handleScroll = () => {
       if (!mainNavRef.current) return;
       const rect = mainNavRef.current.getBoundingClientRect();
-      // If the bottom of the navbar is above the viewport, show the pill
       setShowPill(rect.bottom <= 0);
     };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);

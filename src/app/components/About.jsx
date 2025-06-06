@@ -1,7 +1,7 @@
 import { motion, useAnimationFrame } from "framer-motion";
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
-function getWigglePaths(t, mouse, numLines = 45) {
+function getWigglePaths(t, mouse, numLines = 45, width = 1200) {
   const amplitude       = 12;
   const freq            = 0.8;
   const phase           = 0;
@@ -11,7 +11,6 @@ function getWigglePaths(t, mouse, numLines = 45) {
   const swirlStrength   = 80;
 
   // only cover the right half of the viewport
-  const width     = window.innerWidth;
   const halfW     = width / 2;
   const spacing   = halfW / (numLines - 1);
 
@@ -118,17 +117,28 @@ function getWigglePaths(t, mouse, numLines = 45) {
 
 export default function About() {
     const NUM_LINES = 12;
-    const [wigglePaths, setWigglePaths] = useState(getWigglePaths(0, null, NUM_LINES));
-    const [mouse, setMouse]           = useState(null);
+    const [svgWidth, setSvgWidth] = useState(1200); // default width
+    const [wigglePaths, setWigglePaths] = useState([]); // Start empty
+    const [mouse, setMouse] = useState(null);
 
     useEffect(() => {
-        const onMove = e => setMouse({ x: e.clientX, y: e.clientY });
-        window.addEventListener("mousemove", onMove);
-        return () => window.removeEventListener("mousemove", onMove);
+        if (typeof window !== "undefined") {
+            setSvgWidth(window.innerWidth);
+            setWigglePaths(getWigglePaths(0, null, NUM_LINES, window.innerWidth));
+            const handleResize = () => {
+                setSvgWidth(window.innerWidth);
+                setWigglePaths(getWigglePaths(0, mouse, NUM_LINES, window.innerWidth));
+            };
+            window.addEventListener("resize", handleResize);
+            return () => window.removeEventListener("resize", handleResize);
+        }
+    // eslint-disable-next-line
     }, []);
 
     useAnimationFrame(t => {
-        setWigglePaths(getWigglePaths(t / 1000, mouse, NUM_LINES));
+        if (typeof window !== "undefined") {
+            setWigglePaths(getWigglePaths(t / 1000, mouse, NUM_LINES, svgWidth));
+        }
     });
 
     return (
@@ -136,12 +146,11 @@ export default function About() {
             id="about"
             className="bg-gray-100 relative pt-52 pb-32 overflow-hidden"
         >
-            {/* Single full‐width SVG layer */}
             <svg
                 className="absolute inset-0 w-full h-full pointer-events-none"
                 width="100%"
                 height="100%"
-                viewBox={`0 0 ${window.innerWidth} 1000`}
+                viewBox={`0 0 ${svgWidth} 1000`}
                 preserveAspectRatio="none"
                 fill="none"
             >
