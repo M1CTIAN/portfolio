@@ -1,6 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import AnimatedLetter from "./AnimatedLetter.jsx";
+import Navigation from "./components/Navigation";
+import About from "./components/About";
+import ParallaxSection from "./components/ParallaxSection";
 
 const projects = [
     {
@@ -18,47 +22,152 @@ const projects = [
     // Add more projects as needed
 ];
 
+function ProjectsShowcase({ projects }) {
+    const ref = useRef(null);
+    // Get scroll progress for the section
+    const { scrollYProgress } = useScroll({
+        target: ref,
+        offset: ["start end", "end start"]
+    });
+    // Map vertical scroll to horizontal translation
+    const x = useTransform(scrollYProgress, [0, 1], ["0%", "-60%"]);
+
+    return (
+        <section ref={ref} className="relative py-32 bg-white overflow-x-clip">
+            <h2 className="text-4xl md:text-6xl font-bold text-center mb-16 text-gray-900 tracking-tight">
+                Projects
+            </h2>
+            <div className="relative w-full overflow-visible">
+                <motion.div
+                    style={{ x }}
+                    className="flex gap-12 px-12"
+                >
+                    {projects.map((project, i) => (
+                        <motion.div
+                            key={i}
+                            className="min-w-[350px] max-w-[350px] bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 flex flex-col items-center"
+                            initial={{ opacity: 0, scale: 0.85, rotate: -8 + i * 4 }}
+                            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                            transition={{ duration: 0.8, delay: i * 0.12, type: "spring" }}
+                            viewport={{ once: true, amount: 0.4 }}
+                            whileHover={{ scale: 1.04, rotate: 2 }}
+                        >
+                            <img
+                                src={project.image}
+                                alt={project.title}
+                                className="w-full h-48 object-cover rounded-xl mb-6 shadow-lg"
+                            />
+                            <h3 className="text-2xl font-semibold mb-2">{project.title}</h3>
+                            <p className="text-gray-600 mb-4">{project.description}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {project.tags.map((tag, j) => (
+                                    <span
+                                        key={j}
+                                        className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full text-xs font-medium"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
+        </section>
+    );
+}
+
 export default function Page() {
     const [reveal, setReveal] = useState(false);
-    const [,setScrollDisabled] = useState(true);
+    const [, setScrollDisabled] = useState(true);
+    const [lens, setLens] = useState({ x: 0, y: 0, show: false });
+    const [mouse, setMouse] = useState({ x: -9999, y: -9999 });
+    const [mouseOnScreen, setMouseOnScreen] = useState(true);
+
+    // Refs for letters
+    const arpitRefs = useRef([]);
+    const rajRefs = useRef([]);
+
+    useEffect(() => {
+        // Track mouse globally
+        const handleMouseMove = (e) => {
+            setMouse({ x: e.clientX, y: e.clientY });
+            setMouseOnScreen(true);
+        };
+
+        const handleMouseLeave = () => {
+            // IMMEDIATELY reset on mouse leave
+            setMouseOnScreen(false);
+            setMouse({ x: -9999, y: -9999 });
+        };
+
+        // Add more events for better detection
+        window.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseleave', handleMouseLeave);
+        document.body.addEventListener('mouseleave', handleMouseLeave);
+
+        // Add this fallback check that runs every 100ms
+        const checkInterval = setInterval(() => {
+            // If mouse is at edge or outside window
+            if (
+                !document.hasFocus() ||
+                mouseOnScreen && (
+                    mouse.x <= 0 ||
+                    mouse.y <= 0 ||
+                    mouse.x >= window.innerWidth ||
+                    mouse.y >= window.innerHeight
+                )
+            ) {
+                handleMouseLeave();
+            }
+        }, 100);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseleave', handleMouseLeave);
+            document.body.removeEventListener('mouseleave', handleMouseLeave);
+            clearInterval(checkInterval);
+        };
+    }, [mouse, mouseOnScreen]);
 
     useEffect(() => {
         // Store original scroll position
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
 
-        // More comprehensive scroll prevention
+        // IMPROVED scroll prevention handler
         const preventScroll = (e) => {
-            e.preventDefault();
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             e.stopPropagation();
-            e.stopImmediatePropagation();
             return false;
         };
 
         const preventKeyboardScroll = (e) => {
-            const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // spacebar, page up/down, end, home, arrow keys
+            const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // space, pgup/down, arrows etc
             if (keys.includes(e.keyCode)) {
                 e.preventDefault();
-                e.stopPropagation();
                 return false;
             }
         };
 
-        // Lock scroll position
-        const lockScroll = () => {
-            window.scrollTo(0, scrollTop);
-        };
-
-        // Multiple methods to prevent scrolling
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollTop}px`;
-        document.body.style.width = '100%';
-        document.body.style.overflow = 'hidden';
+        // More aggressive scroll locking
+        document.body.style.cssText = `
+            position: fixed;
+            top: -${scrollTop}px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            overflow: hidden;
+            touch-action: none;
+          `;
         document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100vh';
 
-        // Add event listeners to prevent all forms of scrolling
+        // Immediate event listener attachment
         window.addEventListener('wheel', preventScroll, { passive: false, capture: true });
         window.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
-        window.addEventListener('scroll', lockScroll, { passive: false });
+        window.addEventListener('scroll', () => window.scrollTo(0, scrollTop), { passive: false });
         window.addEventListener('keydown', preventKeyboardScroll, { passive: false });
         document.addEventListener('touchstart', preventScroll, { passive: false });
         document.addEventListener('touchend', preventScroll, { passive: false });
@@ -82,7 +191,7 @@ export default function Page() {
             // Remove event listeners
             window.removeEventListener('wheel', preventScroll, { capture: true });
             window.removeEventListener('touchmove', preventScroll, { capture: true });
-            window.removeEventListener('scroll', lockScroll);
+            window.removeEventListener('scroll', () => window.scrollTo(0, scrollTop));
             window.removeEventListener('keydown', preventKeyboardScroll);
             document.removeEventListener('touchstart', preventScroll);
             document.removeEventListener('touchend', preventScroll);
@@ -102,12 +211,29 @@ export default function Page() {
 
             window.removeEventListener('wheel', preventScroll, { capture: true });
             window.removeEventListener('touchmove', preventScroll, { capture: true });
-            window.removeEventListener('scroll', lockScroll);
+            window.removeEventListener('scroll', () => window.scrollTo(0, scrollTop));
             window.removeEventListener('keydown', preventKeyboardScroll);
             document.removeEventListener('touchstart', preventScroll);
             document.removeEventListener('touchend', preventScroll);
         };
     }, []);
+
+    // Letter animation helper
+    const renderAnimatedLetters = (word, refs, colorClass, plClass) => {
+        return (
+            <h1 className={`${plClass} text-[20vw] text-left md:text-[15vw] lg:text-[480px] font-black ${colorClass} leading-none tracking-tight flex`}>
+                {word.split('').map((char, idx) => {
+                    return (
+                        <AnimatedLetter
+                            key={idx}
+                            char={char}
+                            mousePosition={mouse}
+                        />
+                    );
+                })}
+            </h1>
+        );
+    };
 
     return (
         <main className="bg-gray-100 min-h-screen overflow-hidden">
@@ -156,51 +282,36 @@ export default function Page() {
           ${reveal ? "translate-y-0" : "translate-y-[100vh]"}
         `}
             >
-                {/* Navigation Header */}
-                <nav className="fixed top-0 left-0 w-full z-30 bg-gray-100/80 backdrop-blur-sm">
-                    <div className="flex justify-between items-center px-8 py-6">
-                        <div className="text-sm font-medium text-gray-900">
-                            © Code by Arpit
-                        </div>
-                        <div className="flex gap-8">
-                            <a href="#work" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">Work</a>
-                            <a href="#about" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">About</a>
-                            <a href="#contact" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">Contact</a>
-                        </div>
-                    </div>
-                </nav>
+                <Navigation />
 
                 {/* Main Content Area - Typography Focus */}
-                <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gray-100">
+                <div className="min-h-screen flex justify-center relative overflow-hidden bg-gray-100">
                     {/* Role Badge - Top Right */}
-                    <div className="fixed top-32 right-12 z-30">
+                    <div className="fixed bottom-32 right-12 z-30">
                         <div className="text-right">
-                            <div className="text-gray-400 text-sm mb-1">↘</div>
+                            <div className="text-gray-400 text-sm">↘</div>
                             <div className="text-gray-900 text-lg font-light">Freelance</div>
                             <div className="text-gray-900 text-xl font-medium">Designer & Developer</div>
+                            <div className="text-gray-900 text-lg font-light">Based in New Delhi, India</div>
                         </div>
                     </div>
 
                     {/* Central Typography Layout */}
-                    <div className="relative z-20 text-center">
+                    <div className="relative mt-6 min-w-screen z-20">
                         {/* Main Name Typography */}
-                        <div className="mb-8 flex space-x-1">
-                            <h1 className="text-[20vw] md:text-[15vw] lg:text-[12vw] font-black text-gray-900 leading-none tracking-tight">
-                                Arpit
-                            </h1>
-                            <h1 className="text-[20vw] md:text-[15vw] lg:text-[12vw] font-black text-gray-400 leading-none tracking-tight">
-                                Raj
-                            </h1>
-                        </div>
-
-                        {/* Subtitle */}
-                        <div className="max-w-md mx-auto">
-                            <p className="text-lg text-gray-600 font-light tracking-wide">
-                                Creating modern web experiences
-                            </p>
+                        <div className="">
+                            {renderAnimatedLetters("Arpit", arpitRefs, "text-gray-900", "pl-12")}
+                            {renderAnimatedLetters("Raj", rajRefs, "text-gray-400", "pl-6")}
                         </div>
                     </div>
+                    <div className="absolute bottom-0 w-[65%] -right-20 z-10">
+                        <img
+                            src="./me.png"
+                            alt="Arpit Raj"
+                        />
+                    </div>
                 </div>
+
                 <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
                     <div className="marquee-container">
                         <div className="marquee-content">
@@ -209,44 +320,9 @@ export default function Page() {
                     </div>
                 </div>
             </div>
-
-            {/* Next Section */}
-            <motion.section
-                className="pb-20"
-                id="work"
-                initial={{ opacity: 0, y: 80 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                viewport={{ once: true, amount: 0.3 }}
-            >
-                {projects.map((project, i) => (
-                    <div key={i} className={`flex items-center min-h-screen ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}>
-                        <div className="w-1/3 p-16">
-                            <span className="text-sm text-gray-500">0{i + 1}</span>
-                            <h3 className="text-5xl font-black mb-6">{project.title}</h3>
-                            <p className="text-xl text-gray-600 mb-8">{project.description}</p>
-                            <div className="flex gap-4 mb-8">
-                                {project.tags.map(tag => (
-                                    <span key={tag} className="border border-gray-300 px-4 py-2 text-sm">{tag}</span>
-                                ))}
-                            </div>
-                            <button className="bg-black text-white px-8 py-3 hover:bg-gray-800">
-                                View Project →
-                            </button>
-                        </div>
-                        <div className="w-2/3 relative">
-                            <img src={project.image} className="w-full h-screen object-cover" />
-                            {/* Gradient overlay that blends into background */}
-                            <div
-                                className={`absolute inset-0 pointer-events-none ${i % 2 === 0
-                                    ? 'bg-gradient-to-l from-transparent via-gray-100/30 to-gray-100'
-                                    : 'bg-gradient-to-r from-transparent via-gray-100/30 to-gray-100'
-                                    }`}
-                            />
-                        </div>
-                    </div>
-                ))}
-            </motion.section>
+            {/* About Section with Scroll Animations */}
+            <About />
+            {/* <ProjectsShowcase projects={projects} /> */}
         </main>
     );
 }
