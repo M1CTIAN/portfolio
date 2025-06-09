@@ -84,6 +84,7 @@
   0% {
     --marquee-progress: 0;
   }
+
   100% {
     --marquee-progress: 1;
   }
@@ -93,9 +94,11 @@
   0% {
     transform: translateX(calc(var(--scroll-y, 0) * -0.3px + 20%));
   }
+
   50% {
-    transform: translateX(calc(var(--scroll-y, 0) * -0.3px - 80%));
+    transform: translateX(calc(var(--scroll-y, 0) * -0.3px - 50%));
   }
+
   100% {
     transform: translateX(calc(var(--scroll-y, 0) * -0.3px + 20%));
   }
@@ -103,7 +106,8 @@
 
 :root {
   --scroll-y: 0;
-  --marquee-direction: -1; /* -1 for left, 1 for right */
+  --marquee-direction: -1;
+  /* -1 for left, 1 for right */
   --marquee-progress: 0;
 }
 

@@ -152,28 +152,28 @@ export default function Page() {
 
         // Pure animation loop - independent of scroll
         const animateMarquee = () => {
-            const speed = scrollDirection === 'up' ? 0.5 : -0.5;
+            const speed = scrollDirection === 'up' ? 1 : -1;
             baseOffset += speed;
-            
+
             // Combine base animation with scroll offset
             const totalOffset = baseOffset + scrollOffset;
             document.documentElement.style.setProperty('--marquee-offset', totalOffset);
             document.body.style.setProperty('--marquee-offset', totalOffset);
-            
+
             animationId = requestAnimationFrame(animateMarquee);
         };
 
         const handleScroll = (data) => {
             const scrolled = data?.scroll?.y || window.pageYOffset || 0;
-            
+
             const scrollDiff = scrolled - lastScrollY;
             if (Math.abs(scrollDiff) > 0.5) {
                 scrollDirection = scrollDiff > 0 ? 'down' : 'up';
             }
-            
+
             // Use scroll position as additional offset (smaller influence)
             scrollOffset = scrolled * -0.3;
-            
+
             lastScrollY = scrolled;
             document.documentElement.style.setProperty('--scroll-y', scrolled);
             document.body.style.setProperty('--scroll-y', scrolled);
@@ -194,7 +194,7 @@ export default function Page() {
         return () => {
             if (animationId) cancelAnimationFrame(animationId);
             if (window.locomotive) {
-                try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
+                try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
             }
             window.removeEventListener('scroll', handleScroll);
         };
@@ -219,6 +219,9 @@ export default function Page() {
 
     return (
         <main className="bg-gray-100 min-h-screen overflow-hidden">
+            {/* Move Navigation OUTSIDE the transformed wrapper */}
+            <Navigation />
+            
             {/* ——— KEEP these OUTSIDE the transformed wrapper ——— */}
             {/* Text that moves with shutter */}
             <div
@@ -234,7 +237,6 @@ export default function Page() {
                         : 'translate(-50%, -50%)'
                 }}
             >
-
                 <h1 className="text-5xl md:text-7xl font-extrabold text-[#d1d5db] drop-shadow-xl animate-fadeinup">
                     Crafting <span className="text-[#f3f4f6]">Digital Magic</span>
                 </h1>
@@ -257,6 +259,7 @@ export default function Page() {
                     />
                 </svg>
             </div>
+            
             <div
                 className={`
           relative w-full min-h-screen
@@ -264,10 +267,10 @@ export default function Page() {
           ${reveal ? "translate-y-0" : "translate-y-[100vh]"}
         `}
             >
-                <Navigation />
+                {/* Remove Navigation from here */}
 
                 {/* Main Content Area - Typography Focus */}
-                <div className="min-h-screen flex justify-center relative overflow-hidden bg-gray-100">
+                <div className="min-h-screen flex justify-center relative bg-gray-100">
                     {/* Role Badge - Top Right */}
                     <div className="fixed bottom-32 right-12 z-30">
                         <div className="text-right">
@@ -281,7 +284,7 @@ export default function Page() {
                     {/* Central Typography Layout */}
                     <div className="relative mt-6 min-w-screen z-20">
                         {/* Main Name Typography */}
-                        <div className="">
+                        <div className="overflow-visible">
                             {renderAnimatedLetters("Arpit", arpitRefs, "text-gray-900", "pl-12")}
                             {renderAnimatedLetters("Raj", rajRefs, "text-gray-400", "pl-6")}
                         </div>
