@@ -60,28 +60,57 @@
   /* Increased from 3s to 5s for slower animation */
 }
 
-/* Marquee animation styles */
 .marquee-container {
+  width: 100%;
   overflow: hidden;
-  position: relative;
 }
 
 .marquee-content {
   display: flex;
   white-space: nowrap;
-  /* no translate in base state */
-  transform: translateX(0);
-  animation: marquee-move var(--speed, 20s) linear infinite;
+  transform: translateX(calc(var(--scroll-y, 0) * -0.3px + var(--marquee-offset, 0) * 0.5px));
+  will-change: transform;
+  /* transition: transform 0.2s ease-out; */
 }
 
-@keyframes marquee-move {
-  0% {
-    transform: translateX(0);
-  }
+.marquee-content span {
+  display: inline-block;
+  flex-shrink: 0;
+  padding-right: 2rem;
+}
 
-  100% {
-    transform: translateX(-81%);
+/* Smooth continuous animation */
+@keyframes marquee-smooth {
+  0% {
+    --marquee-progress: 0;
   }
+  100% {
+    --marquee-progress: 1;
+  }
+}
+
+@keyframes marquee-ultra-smooth {
+  0% {
+    transform: translateX(calc(var(--scroll-y, 0) * -0.3px + 20%));
+  }
+  50% {
+    transform: translateX(calc(var(--scroll-y, 0) * -0.3px - 80%));
+  }
+  100% {
+    transform: translateX(calc(var(--scroll-y, 0) * -0.3px + 20%));
+  }
+}
+
+:root {
+  --scroll-y: 0;
+  --marquee-direction: -1; /* -1 for left, 1 for right */
+  --marquee-progress: 0;
+}
+
+body {
+  --scroll-y: 0;
+  --marquee-direction: -1;
+  --marquee-progress: 0;
 }
 
 /* Locomotive Scroll styles */
@@ -185,6 +214,6 @@ main::-webkit-scrollbar {
   display: none;
 }
 
-.times{
+.times {
   font-family: 'Times New Roman', Times, serif;
 }

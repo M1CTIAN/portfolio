@@ -14,9 +14,26 @@ export default function RootLayout({ children }) {
         el: scrollRef.current,
         smooth: true,
       });
+      
+      // Store the instance globally so your page.jsx can access it
+      window.locomotive = scroll;
+      
+      // Also store it in a different way for compatibility
+      window.locomotiveScroll = scroll;
+      
+      console.log("Locomotive Scroll initialized and stored globally");
+      
+      // Dispatch custom event when ready
+      window.dispatchEvent(new CustomEvent('locomotive-ready'));
     });
+    
     return () => {
-      if (scroll) scroll.destroy();
+      if (scroll) {
+        scroll.destroy();
+        // Clean up global references
+        window.locomotive = null;
+        window.locomotiveScroll = null;
+      }
     };
   }, []);
 

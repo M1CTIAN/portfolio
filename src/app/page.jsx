@@ -4,7 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import AnimatedLetter from "./AnimatedLetter.jsx";
 import Navigation from "./components/Navigation";
 import About from "./components/About";
-import ParallaxSection from "./components/ParallaxSection";
+import "./globals.css";
 
 const projects = [
     {
@@ -22,60 +22,7 @@ const projects = [
     // Add more projects as needed
 ];
 
-function ProjectsShowcase({ projects }) {
-    const ref = useRef(null);
-    // Get scroll progress for the section
-    const { scrollYProgress } = useScroll({
-        target: ref,
-        offset: ["start end", "end start"]
-    });
-    // Map vertical scroll to horizontal translation
-    const x = useTransform(scrollYProgress, [0, 1], ["0%", "-60%"]);
 
-    return (
-        <section ref={ref} className="relative py-32 bg-white overflow-x-clip">
-            <h2 className="text-4xl md:text-6xl font-bold text-center mb-16 text-gray-900 tracking-tight">
-                Projects
-            </h2>
-            <div className="relative w-full overflow-visible">
-                <motion.div
-                    style={{ x }}
-                    className="flex gap-12 px-12"
-                >
-                    {projects.map((project, i) => (
-                        <motion.div
-                            key={i}
-                            className="min-w-[350px] max-w-[350px] bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 flex flex-col items-center"
-                            initial={{ opacity: 0, scale: 0.85, rotate: -8 + i * 4 }}
-                            whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-                            transition={{ duration: 0.8, delay: i * 0.12, type: "spring" }}
-                            viewport={{ once: true, amount: 0.4 }}
-                            whileHover={{ scale: 1.04, rotate: 2 }}
-                        >
-                            <img
-                                src={project.image}
-                                alt={project.title}
-                                className="w-full h-48 object-cover rounded-xl mb-6 shadow-lg"
-                            />
-                            <h3 className="text-2xl font-semibold mb-2">{project.title}</h3>
-                            <p className="text-gray-600 mb-4">{project.description}</p>
-                            <div className="flex flex-wrap gap-2">
-                                {project.tags.map((tag, j) => (
-                                    <span
-                                        key={j}
-                                        className="px-3 py-1 bg-indigo-100 text-indigo-600 rounded-full text-xs font-medium"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        </motion.div>
-                    ))}
-                </motion.div>
-            </div>
-        </section>
-    );
-}
 
 export default function Page() {
     const [reveal, setReveal] = useState(false);
@@ -89,46 +36,24 @@ export default function Page() {
     const rajRefs = useRef([]);
 
     useEffect(() => {
-        // Track mouse globally
         const handleMouseMove = (e) => {
             setMouse({ x: e.clientX, y: e.clientY });
             setMouseOnScreen(true);
         };
 
         const handleMouseLeave = () => {
-            // IMMEDIATELY reset on mouse leave
             setMouseOnScreen(false);
             setMouse({ x: -9999, y: -9999 });
         };
 
-        // Add more events for better detection
-        window.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseleave', handleMouseLeave);
-        document.body.addEventListener('mouseleave', handleMouseLeave);
-
-        // Add this fallback check that runs every 100ms
-        const checkInterval = setInterval(() => {
-            // If mouse is at edge or outside window
-            if (
-                !document.hasFocus() ||
-                mouseOnScreen && (
-                    mouse.x <= 0 ||
-                    mouse.y <= 0 ||
-                    mouse.x >= window.innerWidth ||
-                    mouse.y >= window.innerHeight
-                )
-            ) {
-                handleMouseLeave();
-            }
-        }, 100);
+        window.addEventListener('mousemove', handleMouseMove, { passive: true });
+        document.addEventListener('mouseleave', handleMouseLeave, { passive: true });
 
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseleave', handleMouseLeave);
-            document.body.removeEventListener('mouseleave', handleMouseLeave);
-            clearInterval(checkInterval);
         };
-    }, [mouse, mouseOnScreen]);
+    }, []); // EMPTY dependency array - this was causing re-renders!
 
     useEffect(() => {
         // Store original scroll position
@@ -195,7 +120,7 @@ export default function Page() {
             window.removeEventListener('keydown', preventKeyboardScroll);
             document.removeEventListener('touchstart', preventScroll);
             document.removeEventListener('touchend', preventScroll);
-        }, 3800);
+        }, 2800);
 
         return () => {
             clearTimeout(timer);
@@ -215,6 +140,63 @@ export default function Page() {
             window.removeEventListener('keydown', preventKeyboardScroll);
             document.removeEventListener('touchstart', preventScroll);
             document.removeEventListener('touchend', preventScroll);
+        };
+    }, []);
+
+    useEffect(() => {
+        let lastScrollY = 0;
+        let scrollDirection = 'down';
+        let baseOffset = -2000;
+        let animationId = null;
+        let scrollOffset = 0;
+
+        // Pure animation loop - independent of scroll
+        const animateMarquee = () => {
+            const speed = scrollDirection === 'up' ? 0.5 : -0.5;
+            baseOffset += speed;
+            
+            // Combine base animation with scroll offset
+            const totalOffset = baseOffset + scrollOffset;
+            document.documentElement.style.setProperty('--marquee-offset', totalOffset);
+            document.body.style.setProperty('--marquee-offset', totalOffset);
+            
+            animationId = requestAnimationFrame(animateMarquee);
+        };
+
+        const handleScroll = (data) => {
+            const scrolled = data?.scroll?.y || window.pageYOffset || 0;
+            
+            const scrollDiff = scrolled - lastScrollY;
+            if (Math.abs(scrollDiff) > 0.5) {
+                scrollDirection = scrollDiff > 0 ? 'down' : 'up';
+            }
+            
+            // Use scroll position as additional offset (smaller influence)
+            scrollOffset = scrolled * -0.3;
+            
+            lastScrollY = scrolled;
+            document.documentElement.style.setProperty('--scroll-y', scrolled);
+            document.body.style.setProperty('--scroll-y', scrolled);
+        };
+
+        // Setup listeners
+        const setupScrollListeners = () => {
+            if (window.locomotive) {
+                window.locomotive.on('scroll', handleScroll);
+            } else {
+                window.addEventListener('scroll', handleScroll, { passive: true });
+            }
+            animateMarquee();
+        };
+
+        setTimeout(setupScrollListeners, 4000);
+
+        return () => {
+            if (animationId) cancelAnimationFrame(animationId);
+            if (window.locomotive) {
+                try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
+            }
+            window.removeEventListener('scroll', handleScroll);
         };
     }, []);
 
@@ -315,14 +297,17 @@ export default function Page() {
                 <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
                     <div className="marquee-container">
                         <div className="marquee-content">
-                            <div className="text-lg font-medium text-white">CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • </div>
+                            <span className="text-lg font-medium text-white inline-block">
+                                CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
+                            </span>
+                            <span className="text-lg font-medium text-white inline-block">
+                                CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
-            {/* About Section with Scroll Animations */}
             <About />
-            {/* <ProjectsShowcase projects={projects} /> */}
         </main>
     );
 }
