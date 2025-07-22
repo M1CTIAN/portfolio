@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import AnimatedLetter from "./AnimatedLetter.jsx";
 import Navigation from "./components/Navigation";
 import About from "./components/About";
+import ProjectShowcase from "./components/ProjectsCarousel";
 import "./globals.css";
 
 const projects = [
@@ -311,6 +312,7 @@ export default function Page() {
                 </div>
             </div>
             <About />
+            <ProjectShowcase />
         </main>
     );
 }

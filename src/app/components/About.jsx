@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
 
-// Simplified wiggle path generator - removed unnecessary complexity
+// Simplified wiggle path generator with smooth endings
 function getWigglePaths(t, numLines = 8, width = 1200) {
-    const amplitude = 8; // Reduced from 12
-    const freq = 0.6; // Reduced from 0.8
-    const step = 12; // Increased from 8 for fewer points
+    const amplitude = 8;
+    const freq = 0.6;
+    const step = 12;
 
     const halfW = width / 2;
     const spacing = halfW / (numLines - 1);
@@ -15,9 +15,13 @@ function getWigglePaths(t, numLines = 8, width = 1200) {
         const baseX = halfW + spacing * i;
         let d = '';
 
-        // Generate fewer points for better performance
-        for (let y = 0; y <= 800; y += step) { // Reduced height from 1000
-            const wiggle = Math.sin(t * freq + y / 400 + i * 0.2) * amplitude;
+        // Generate points with fade-out at the end
+        for (let y = 0; y <= 800; y += step) {
+            // Fade out the wiggle amplitude towards the end
+            const fadeOut = Math.max(0, 1 - (y / 800) * 0.8); // Start fading at 20% from end
+            const currentAmplitude = amplitude * fadeOut;
+            
+            const wiggle = Math.sin(t * freq + y / 400 + i * 0.2) * currentAmplitude;
             const x = baseX + wiggle;
 
             if (y === 0) {
@@ -26,6 +30,12 @@ function getWigglePaths(t, numLines = 8, width = 1200) {
                 d += ` L${x},${y}`;
             }
         }
+        
+        // Add a smooth curve to center at the end
+        const finalY = 800;
+        const finalX = baseX; // Return to base position
+        d += ` Q${baseX + (amplitude * 0.3)},${finalY - 20} ${finalX},${finalY}`;
+        
         paths.push(d);
     }
 
@@ -33,7 +43,7 @@ function getWigglePaths(t, numLines = 8, width = 1200) {
 }
 
 export default function About() {
-    const NUM_LINES = 10; // Reduced from 12
+    const NUM_LINES = 10;
     const [svgWidth, setSvgWidth] = useState(1200);
     const [time, setTime] = useState(0);
 
@@ -76,7 +86,7 @@ export default function About() {
             id="about"
             className="bg-gray-100 relative pt-52 pb-32 overflow-hidden"
         >
-            {/* Simplified SVG - removed mouse interaction for better performance */}
+            {/* Enhanced SVG with gradient fade */}
             <svg
                 className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
                 width="100%"
@@ -85,13 +95,24 @@ export default function About() {
                 preserveAspectRatio="none"
                 fill="none"
             >
+                <defs>
+                    {/* Gradient for fading effect */}
+                    <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="rgba(99,102,241,0.15)" stopOpacity="1"/>
+                        <stop offset="70%" stopColor="rgba(99,102,241,0.15)" stopOpacity="1"/>
+                        <stop offset="90%" stopColor="rgba(99,102,241,0.08)" stopOpacity="0.5"/>
+                        <stop offset="100%" stopColor="rgba(99,102,241,0.02)" stopOpacity="0.1"/>
+                    </linearGradient>
+                </defs>
+                
                 {wigglePaths.map((d, i) => (
                     <path
                         key={i}
                         d={d}
-                        stroke="rgba(99,102,241,0.15)"
+                        stroke="url(#fadeGradient)"
                         strokeWidth={1.5}
                         fill="none"
+                        strokeLinecap="round"
                     />
                 ))}
             </svg>
