@@ -38,6 +38,68 @@
   }
 }
 
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeInScale {
+  animation: fadeInScale 0.3s ease-out forwards;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+/* Epic CTA Section Animations */
+@keyframes drift {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-10px, -10px);
+  }
+  50% {
+    transform: translate(10px, -20px);
+  }
+  75% {
+    transform: translate(-10px, -10px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+}
+
 /* SVG Shutter styles */
 .shutter-overlay {
   transition: none;
@@ -63,14 +125,17 @@
 .marquee-container {
   width: 100%;
   overflow: hidden;
+  will-change: auto;
 }
 
 .marquee-content {
   display: flex;
   white-space: nowrap;
-  transform: translateX(calc(var(--scroll-y, 0) * -0.3px + var(--marquee-offset, 0) * 0.5px));
+  transform: translateX(calc(var(--marquee-offset, 0) * 0.5px));
   will-change: transform;
-  /* transition: transform 0.2s ease-out; */
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .marquee-content span {

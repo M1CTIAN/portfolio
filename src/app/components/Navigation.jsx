@@ -8,6 +8,28 @@ const Navigation = () => {
   const mainNavRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
+  // Smooth scroll function that works with Locomotive Scroll
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      if (window.locomotive && window.locomotive.scrollTo) {
+        // Use Locomotive Scroll if available
+        window.locomotive.scrollTo(element, {
+          duration: 1000,
+          easing: [0.25, 0.0, 0.35, 1.0]
+        });
+      } else {
+        // Fallback to native smooth scroll
+        element.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    }
+    // Close sidebar if open
+    setSidebarOpen(false);
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -178,27 +200,30 @@ const Navigation = () => {
 
           {/* Navigation Links */}
           <nav className="mt-16 space-y-8">
-            <a
-              href="#work"
-              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300"
-              onClick={() => setSidebarOpen(false)}
+            <button
+              onClick={() => scrollToSection('home')}
+              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300 text-left"
             >
-              Work
-            </a>
-            <a
-              href="#about"
-              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300"
-              onClick={() => setSidebarOpen(false)}
+              Home
+            </button>
+            <button
+              onClick={() => scrollToSection('about')}
+              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300 text-left"
             >
               About
-            </a>
-            <a
-              href="#contact"
-              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300"
-              onClick={() => setSidebarOpen(false)}
+            </button>
+            <button
+              onClick={() => scrollToSection('work')}
+              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300 text-left"
+            >
+              Work
+            </button>
+            <button
+              onClick={() => scrollToSection('contact')}
+              className="block text-2xl font-medium text-gray-900 hover:text-indigo-600 transition-colors duration-300 text-left"
             >
               Contact
-            </a>
+            </button>
           </nav>
 
           {/* Footer */}
@@ -222,20 +247,35 @@ const Navigation = () => {
           : "opacity-100 translate-y-0"
           }`}
       >
-        <div className="flex justify-between items-center px-8 py-6 backdrop-blur-sm">
+        <div className="flex justify-between items-center px-8 py-6">
           <div className="text-sm font-medium text-gray-900">
             © Code by Arpit
           </div>
           <div className="flex gap-8">
-            <a href="#work" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">
-              Work
-            </a>
-            <a href="#about" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">
+            <button 
+              onClick={() => scrollToSection('home')} 
+              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+            >
+              Home
+            </button>
+            <button 
+              onClick={() => scrollToSection('about')} 
+              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+            >
               About
-            </a>
-            <a href="#contact" className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors">
+            </button>
+            <button 
+              onClick={() => scrollToSection('work')} 
+              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+            >
+              Work
+            </button>
+            <button 
+              onClick={() => scrollToSection('contact')} 
+              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
+            >
               Contact
-            </a>
+            </button>
           </div>
         </div>
       </nav>

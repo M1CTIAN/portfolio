@@ -221,7 +221,8 @@ export default function About() {
                                 viewport={{ once: true, margin: "-100px" }}
                             >
                                 <motion.a
-                                    href="mailto:arpitraj.iiitb@gmail.com"
+                                    href="https://www.linkedin.com/in/arpit---raj/"
+                                    target="_blank"
                                     className="px-6 py-3 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg transition-all duration-200"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
