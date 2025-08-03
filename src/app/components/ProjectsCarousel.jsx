@@ -1,4 +1,10 @@
+"use client";
+import React from 'react';
+import { useCursor } from '../context/CursorContext'; // Import the context hook
+
 export default function ProjectsCarousel() {
+    const { setCursorType } = useCursor(); // Get the setter function from context
+
     const projects = [
         {
             id: 1,
@@ -27,7 +33,10 @@ export default function ProjectsCarousel() {
     ];
 
     return (
-        <section id="work" className="min-h-screen bg-white py-20 px-6">
+        <section 
+            id="work" 
+            className="min-h-screen bg-white py-20 px-6 cursor-none" // Add cursor-none here
+        >
             <div className="max-w-7xl mx-auto">
                 {/* Section Header */}
                 <div className="mb-20">
@@ -47,7 +56,9 @@ export default function ProjectsCarousel() {
                     {projects.map((project, index) => (
                         <div 
                             key={project.id}
-                            className="group cursor-pointer"
+                            className="group" // cursor-none is inherited from the parent section
+                            onMouseEnter={() => setCursorType('hover')}
+                            onMouseLeave={() => setCursorType('default')}
                         >
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                                 {/* Project Image */}
@@ -56,7 +67,7 @@ export default function ProjectsCarousel() {
                                         href={project.link}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="block"
+                                        className="block cursor-none" // Add cursor-none here
                                     >
                                         <div className="relative overflow-hidden bg-gray-100 aspect-[4/3] rounded-sm">
                                             <img 
@@ -64,7 +75,6 @@ export default function ProjectsCarousel() {
                                                 alt={project.title}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                                             />
-                                            {/* Overlay */}
                                             <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
                                         </div>
                                     </a>
@@ -73,7 +83,6 @@ export default function ProjectsCarousel() {
                                 {/* Project Info */}
                                 <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
                                     <div className="space-y-6">
-                                        {/* Project Number & Year */}
                                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                                             <span className="font-mono">
                                                 {String(index + 1).padStart(2, '0')}
@@ -81,24 +90,18 @@ export default function ProjectsCarousel() {
                                             <span>•</span>
                                             <span>{project.year}</span>
                                         </div>
-
-                                        {/* Project Title */}
                                         <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight group-hover:text-gray-600 transition-colors duration-300">
                                             {project.title}
                                         </h3>
-
-                                        {/* Description */}
                                         <p className="text-gray-600 text-lg leading-relaxed">
                                             {project.description}
                                         </p>
-
-                                        {/* View Project Link */}
                                         <div className="pt-4">
                                             <a 
                                                 href={project.link}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center text-gray-900 font-medium group-hover:gap-3 gap-2 transition-all duration-300 hover:text-gray-600"
+                                                className="inline-flex items-center text-gray-900 font-medium group-hover:gap-3 gap-2 transition-all duration-300 hover:text-gray-600 cursor-none" // Add cursor-none here
                                             >
                                                 <span>View Project</span>
                                                 <svg 
@@ -129,4 +132,4 @@ export default function ProjectsCarousel() {
             </div>
         </section>
     );
-}   
+}

@@ -1,152 +1,61 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useCursor } from '../context/CursorContext'; // Import the context hook
 
 const Navigation = () => {
+  const { isLoaded } = useCursor(); // Get the global loaded state
   const [showPill, setShowPill] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const mainNavRef = useRef(null);
   const [mounted, setMounted] = useState(false);
 
   // Smooth scroll function that works with Locomotive Scroll
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
-    if (element) {
-      if (window.locomotive && window.locomotive.scrollTo) {
-        // Use Locomotive Scroll if available
-        window.locomotive.scrollTo(element, {
-          duration: 1000,
-          easing: [0.25, 0.0, 0.35, 1.0]
-        });
-      } else {
-        // Fallback to native smooth scroll
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
+    if (element && window.locomotive) {
+      window.locomotive.scrollTo(element, {
+        duration: 1200,
+        easing: [0.25, 0.0, 0.35, 1.0],
+        offset: -50 // Optional offset
+      });
+    } else if (element) {
+      // Fallback to native smooth scroll
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-    // Close sidebar if open
     setSidebarOpen(false);
   };
 
   useEffect(() => {
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    // Only run on client
-    if (typeof window === "undefined") return;
-
-    let ticking = false;
 
     const handleScroll = (data) => {
-      // Get scroll position from locomotive or fallback to native
-      const scrolled = data?.scroll?.y ||
-        window.locomotive?.scroll?.y ||
-        window.locomotive?.instance?.scroll?.y ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop || 0;
-
-      // Check if main nav should be hidden (scrolled past it)
-      const shouldShowPill = scrolled > 100;
-
-      if (shouldShowPill !== showPill) {
-        setShowPill(shouldShowPill);
-      }
+      const scrollY = data?.scroll?.y ?? window.scrollY;
+      setShowPill(scrollY > 100);
     };
 
-    const updateScrollVar = () => {
-      const scrolled = window.locomotive?.scroll?.y ||
-        window.locomotive?.instance?.scroll?.y ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop || 0;
-
-      const shouldShowPill = scrolled > 100;
-
-      if (shouldShowPill !== showPill) {
-        setShowPill(shouldShowPill);
-      }
-
-      ticking = false;
-    };
-
-    const handleScrollEvent = (data) => {
-      // Handle locomotive scroll data
-      if (data?.scroll?.y !== undefined) {
-        handleScroll(data);
-        return;
-      }
-
-      // Handle native scroll
-      if (!ticking) {
-        requestAnimationFrame(updateScrollVar);
-        ticking = true;
-      }
-    };
-
-    const setupScrollListeners = () => {
+    const setupListeners = () => {
       if (window.locomotive) {
-        try {
-          window.locomotive.on('scroll', handleScrollEvent);
-          window.locomotive.on('update', handleScrollEvent);
-        } catch (e) {
-          window.addEventListener("scroll", handleScrollEvent, { passive: true });
-        }
+        window.locomotive.on('scroll', handleScroll);
       } else {
-        window.addEventListener("scroll", handleScrollEvent, { passive: true });
+        window.addEventListener('scroll', handleScroll, { passive: true });
       }
-
-      // Initial check
-      updateScrollVar();
+      handleScroll();
     };
 
-    const locomotiveReadyHandler = () => {
-      setTimeout(setupScrollListeners, 100);
-    };
-
-    window.addEventListener('locomotive-ready', locomotiveReadyHandler);
-
-    const timer = setTimeout(() => {
-      setupScrollListeners();
-    }, 4000);
+    if (window.locomotive) {
+      setupListeners();
+    } else {
+      const timer = setTimeout(setupListeners, 500);
+      return () => clearTimeout(timer);
+    }
 
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener('locomotive-ready', locomotiveReadyHandler);
       if (window.locomotive) {
-        try {
-          window.locomotive.off('scroll', handleScrollEvent);
-          window.locomotive.off('update', handleScrollEvent);
-        } catch (e) { }
+        try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
       }
-      window.removeEventListener("scroll", handleScrollEvent);
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [showPill]);
-
-  const pillNavigation = (
-    <div className="fixed top-6 right-8 z-[60] pointer-events-none">
-      <nav
-        className={`pointer-events-auto transition-all duration-700 ease-out ${showPill
-          ? "opacity-100 scale-100 translate-y-0"
-          : "opacity-0 scale-90 translate-y-2 pointer-events-none"
-          }`}
-      >
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="w-12 h-12 bg-white/95 shadow-xl rounded-full border border-gray-200/50 backdrop-blur-md flex items-center justify-center hover:bg-gray-50 transition-colors duration-300"
-        >
-          <div className="flex flex-col items-center justify-center space-y-1">
-            <div className="w-4 h-0.5 bg-gray-900 rounded"></div>
-            <div className="w-4 h-0.5 bg-gray-900 rounded"></div>
-            <div className="w-4 h-0.5 bg-gray-900 rounded"></div>
-          </div>
-        </button>
-      </nav>
-    </div>
-  );
+  }, []);
 
   const sidebar = (
     <>
@@ -238,54 +147,48 @@ const Navigation = () => {
   );
 
   return (
-    <>
-      {/* Main navbar (visible at top) */}
+    // This wrapper controls the fade-in of the entire navigation component
+    <div className={`transition-opacity duration-500 delay-1000 ${isLoaded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* Main Navbar - Hidden on scroll */}
       <nav
-        ref={mainNavRef}
-        className={`fixed top-0 left-0 w-full z-[60] transition-all duration-700 ease-out ${showPill
-          ? "opacity-0 -translate-y-full pointer-events-none"
-          : "opacity-100 translate-y-0"
-          }`}
+        className={`fixed top-0 left-0 w-full z-40 transition-transform duration-300 ${
+          showPill ? "-translate-y-full" : "translate-y-0"
+        }`}
       >
-        <div className="flex justify-between items-center px-8 py-6">
-          <div className="text-sm font-medium text-gray-900">
-            © Code by Arpit
-          </div>
-          <div className="flex gap-8">
-            <button 
-              onClick={() => scrollToSection('home')} 
-              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
-            >
-              Home
-            </button>
-            <button 
-              onClick={() => scrollToSection('about')} 
-              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
-            >
-              About
-            </button>
-            <button 
-              onClick={() => scrollToSection('work')} 
-              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
-            >
-              Work
-            </button>
-            <button 
-              onClick={() => scrollToSection('contact')} 
-              className="text-sm font-medium text-gray-900 hover:text-gray-600 transition-colors"
-            >
-              Contact
-            </button>
+        <div className="px-10 mx-auto py-4">
+          <div className="flex justify-between items-center">
+            <div className="text-lg font-medium text-gray-900">
+              © Code by Arpit
+            </div>
+            <div className="hidden md:flex items-center space-x-8">
+              <button onClick={() => scrollToSection('home')} className="text-gray-600 hover:text-gray-900">Home</button>
+              <button onClick={() => scrollToSection('about')} className="text-gray-600 hover:text-gray-900">About</button>
+              <button onClick={() => scrollToSection('work')} className="text-gray-600 hover:text-gray-900">Work</button>
+              <button onClick={() => scrollToSection('contact')} className="text-gray-600 hover:text-gray-900">Contact</button>
+            </div>
           </div>
         </div>
       </nav>
 
-      {/* Pill navbar rendered in portal (outside locomotive container) */}
-      {mounted && createPortal(pillNavigation, document.body)}
+      {/* Pill / Hamburger Menu Button - Appears on scroll */}
+      <div
+        className={`fixed top-6 right-6 z-50 transition-all duration-500 ${
+          showPill ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+        }`}
+      >
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="bg-white/80 backdrop-blur-md shadow-lg rounded-full p-3"
+        >
+          <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+          </svg>
+        </button>
+      </div>
 
-      {/* Sidebar rendered in portal */}
+      {/* Sidebar - Mobile Menu */}
       {mounted && createPortal(sidebar, document.body)}
-    </>
+    </div>
   );
 };
 

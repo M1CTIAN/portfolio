@@ -122,27 +122,7 @@
   /* Increased from 3s to 5s for slower animation */
 }
 
-.marquee-container {
-  width: 100%;
-  overflow: hidden;
-  will-change: auto;
-}
-
-.marquee-content {
-  display: flex;
-  white-space: nowrap;
-  transform: translateX(calc(var(--marquee-offset, 0) * 0.5px));
-  will-change: transform;
-  transform-style: preserve-3d;
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-.marquee-content span {
-  display: inline-block;
-  flex-shrink: 0;
-  padding-right: 2rem;
-}
+/* --- REMOVED Optimized Marquee Animation --- */
 
 /* Smooth continuous animation */
 @keyframes marquee-smooth {
@@ -285,4 +265,36 @@ main::-webkit-scrollbar {
 
 .times {
   font-family: 'Times New Roman', Times, serif;
+}
+
+.marquee-container {
+    display: flex;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.marquee-content {
+    display: flex; /* This was the missing piece */
+    flex-shrink: 0; /* Prevents content from shrinking */
+    will-change: transform; /* Optimizes for animation */
+}
+
+.marquee-container:hover .marquee-content {
+    /* This is optional: you can remove it if you don't want the pause on hover */
+    animation-play-state: paused;
+}
+
+@tailwind utilities;
+
+@keyframes strong-wiggle {
+  0%, 100% {
+    transform: rotate(-4deg) translateX(-4px);
+  }
+  50% {
+    transform: rotate(4deg) translateX(4px);
+  }
+}
+
+.animate-strong-wiggle {
+  animation: strong-wiggle 2s ease-in-out infinite;
 }

@@ -1,6 +1,9 @@
 'use client';
 import { useEffect, useRef } from "react";
 import "./globals.css";
+import Navigation from "./components/Navigation";
+import { CursorProvider } from "./context/CursorContext"; // Import provider
+import CustomCursor from "./components/CustomCursor"; // Import cursor
 
 export default function RootLayout({ children }) {
   const scrollRef = useRef(null);
@@ -13,34 +16,14 @@ export default function RootLayout({ children }) {
       scroll = new LocomotiveScroll.default({
         el: scrollRef.current,
         smooth: true,
-        smoothMobile: false,
-        multiplier: 1.0,
-        firefoxMultiplier: 50,
-        touchMultiplier: 2,
-        scrollbarContainer: false,
-        getSpeed: false,
-        getDirection: false,
-        scrollFromAnywhere: false,
-        lerp: 0.1,
-        class: 'is-revealed',
-        initClass: 'has-scroll-init',
-        tablet: {
-          smooth: false,
-          direction: 'vertical',
-        },
-        smartphone: {
-          smooth: false,
-          direction: 'vertical',
-        }
+        lerp: 0.08, // A lower value like 0.08 makes scrolling feel smoother
+        multiplier: 0.8, // Slightly reduces scroll speed for a less frantic feel
+        smoothMobile: false, // Use native scrolling on mobile for better performance
+        getDirection: true, // Required for the marquee direction change
       });
       
-      // Store the instance globally so your page.jsx can access it
+      // Store the instance globally
       window.locomotive = scroll;
-      
-      // Also store it in a different way for compatibility
-      window.locomotiveScroll = scroll;
-      
-      console.log("Locomotive Scroll initialized and stored globally");
       
       // Dispatch custom event when ready
       window.dispatchEvent(new CustomEvent('locomotive-ready'));
@@ -49,20 +32,24 @@ export default function RootLayout({ children }) {
     return () => {
       if (scroll) {
         scroll.destroy();
-        // Clean up global references
         window.locomotive = null;
-        window.locomotiveScroll = null;
       }
     };
   }, []);
 
   return (
     <html lang="en">
-      <body>
-        <div data-scroll-container ref={scrollRef}>
-          {children}
-        </div>
-      </body>
+      <CursorProvider>
+        <body>
+          <CustomCursor />
+          {/* Render Navigation OUTSIDE the scroll container */}
+          <Navigation />
+          {/* The scroll container only contains the page content */}
+          <div data-scroll-container ref={scrollRef}>
+            {children}
+          </div>
+        </body>
+      </CursorProvider>
     </html>
   );
 }

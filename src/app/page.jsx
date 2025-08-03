@@ -1,13 +1,15 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import Navigation from "./components/Navigation";
+import React, { useEffect, useState, useRef } from "react";
+import { useCursor } from "./context/CursorContext"; // Import the context hook
+import Image from "next/image"; // Import the Next.js Image component
+// import Navigation from "./components/Navigation"; // REMOVE THIS IMPORT
 import About from "./components/About";
 import ProjectShowcase from "./components/ProjectsCarousel";
 import Interactive3D from "./components/Interactive3D";
 import "./globals.css";
 
 export default function Page() {
-    const [reveal, setReveal] = useState(false);
+    const { isLoaded, setIsLoaded } = useCursor(); // Use the global state
     const [, setScrollDisabled] = useState(true);
     const [showEmailCopied, setShowEmailCopied] = useState(false);
 
@@ -23,174 +25,154 @@ export default function Page() {
         }
     };
 
+    // Update this useEffect to use the global state
     useEffect(() => {
-        // Store original scroll position
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        if (isLoaded) return; // Prevent this from running more than once
 
-        // IMPROVED scroll prevention handler
-        const preventScroll = (e) => {
-            if (e.cancelable) {
-                e.preventDefault();
-            }
-            e.stopPropagation();
-            return false;
-        };
+        const timer = setTimeout(() => setIsLoaded(true), 1000);
+        const animationDuration = 2800; // Matches the intro animation duration
 
-        const preventKeyboardScroll = (e) => {
-            const keys = [32, 33, 34, 35, 36, 37, 38, 39, 40]; // space, pgup/down, arrows etc
-            if (keys.includes(e.keyCode)) {
-                e.preventDefault();
-                return false;
+        // Function to safely stop locomotive scroll
+        const stopScroll = () => {
+            if (window.locomotive) {
+                window.locomotive.stop();
+            } else {
+                // If locomotive is not ready, try again shortly.
+                // This can happen due to initialization order.
+                setTimeout(stopScroll, 50);
             }
         };
 
-        // More aggressive scroll locking
-        document.body.style.cssText = `
-            position: fixed;
-            top: -${scrollTop}px;
-            left: 0;
-            right: 0;
-            width: 100%;
-            overflow: hidden;
-            touch-action: none;
-          `;
-        document.documentElement.style.overflow = 'hidden';
-        document.documentElement.style.height = '100vh';
+        // Function to safely re-enable locomotive scroll
+        const startScroll = () => {
+            if (window.locomotive) {
+                window.locomotive.start();
+            } else {
+                setTimeout(startScroll, 50);
+            }
+        };
 
-        // Immediate event listener attachment
-        window.addEventListener('wheel', preventScroll, { passive: false, capture: true });
-        window.addEventListener('touchmove', preventScroll, { passive: false, capture: true });
-        window.addEventListener('scroll', () => window.scrollTo(0, scrollTop), { passive: false });
-        window.addEventListener('keydown', preventKeyboardScroll, { passive: false });
-        document.addEventListener('touchstart', preventScroll, { passive: false });
-        document.addEventListener('touchend', preventScroll, { passive: false });
+        stopScroll(); // Stop scrolling immediately
 
-        const timer = setTimeout(() => setReveal(true), 1000);
-
-        // Re-enable scrolling after 4 seconds
+        // Re-enable scrolling after the animation completes
         const scrollTimer = setTimeout(() => {
             setScrollDisabled(false);
-
-            // Restore scroll
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-
-            // Restore scroll position
-            window.scrollTo(0, scrollTop);
-
-            // Remove event listeners
-            window.removeEventListener('wheel', preventScroll, { capture: true });
-            window.removeEventListener('touchmove', preventScroll, { capture: true });
-            window.removeEventListener('scroll', () => window.scrollTo(0, scrollTop));
-            window.removeEventListener('keydown', preventKeyboardScroll);
-            document.removeEventListener('touchstart', preventScroll);
-            document.removeEventListener('touchend', preventScroll);
-        }, 2800);
+            startScroll();
+        }, animationDuration);
 
         return () => {
             clearTimeout(timer);
             clearTimeout(scrollTimer);
-
-            // Cleanup: ensure scrolling is re-enabled and listeners are removed
-            document.body.style.position = '';
-            document.body.style.top = '';
-            document.body.style.width = '';
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-            window.scrollTo(0, scrollTop);
-
-            window.removeEventListener('wheel', preventScroll, { capture: true });
-            window.removeEventListener('touchmove', preventScroll, { capture: true });
-            window.removeEventListener('scroll', () => window.scrollTo(0, scrollTop));
-            window.removeEventListener('keydown', preventKeyboardScroll);
-            document.removeEventListener('touchstart', preventScroll);
-            document.removeEventListener('touchend', preventScroll);
+            // Cleanup: ensure scroll is re-enabled if the component unmounts
+            // This check is important to prevent errors if locomotive is destroyed.
+            if (window.locomotive) {
+                try { window.locomotive.start(); } catch (e) {}
+            }
         };
-    }, []);
+    }, [isLoaded, setIsLoaded]); // Empty dependency array ensures this runs only once
 
+    const marqueeRef = useRef(null);
+
+    // Optimized, Intersection-Aware Marquee Animation
     useEffect(() => {
+        const marqueeElement = marqueeRef.current;
+        if (!marqueeElement) return;
+
         let lastScrollY = 0;
         let scrollDirection = 'down';
         let targetSpeed = -0.8;
         let currentSpeed = -0.8;
-        let baseOffset = -2000;
+        let offset = 0;
         let animationId = null;
-        let lastTime = performance.now();
 
-        // Smooth animation loop with speed interpolation
-        const animateMarquee = (currentTime) => {
-            const deltaTime = Math.min(currentTime - lastTime, 16) / 1000;
+        const marqueeContent = marqueeElement.querySelector('.marquee-content');
+        if (!marqueeContent) return;
+
+        let singleContentWidth = 0;
+
+        const animateMarquee = () => {
+            // Lazily calculate width on the first frame to ensure it's not 0
+            if (singleContentWidth === 0) {
+                singleContentWidth = marqueeContent.scrollWidth / 2;
+                if (singleContentWidth === 0) {
+                    animationId = requestAnimationFrame(animateMarquee);
+                    return; // Wait for next frame if width is not ready
+                }
+            }
 
             // Smooth speed transition using linear interpolation
             const lerpFactor = 0.05;
             currentSpeed += (targetSpeed - currentSpeed) * lerpFactor;
+            offset += currentSpeed;
 
-            // Apply the smoothed speed
-            baseOffset += currentSpeed;
-
-            // Reset offset periodically to prevent large numbers
-            if (Math.abs(baseOffset) > 10000) {
-                baseOffset = baseOffset > 0 ? 1000 : -1000;
+            // Correct, seamless loop logic for both directions
+            if (currentSpeed < 0 && offset <= -singleContentWidth) {
+                // If moving left and passed one full content width, loop back
+                offset += singleContentWidth;
+            } else if (currentSpeed > 0 && offset >= 0) {
+                // If moving right and returned to the start, loop back
+                offset -= singleContentWidth;
             }
 
-            document.documentElement.style.setProperty('--marquee-offset', baseOffset);
-
-            lastTime = currentTime;
+            marqueeContent.style.transform = `translateX(${offset}px)`;
             animationId = requestAnimationFrame(animateMarquee);
         };
 
-        let ticking = false;
         const handleScroll = (data) => {
-            if (!ticking) {
-                requestAnimationFrame(() => {
-                    const scrolled = data?.scroll?.y || window.pageYOffset || 0;
-                    const scrollDiff = scrolled - lastScrollY;
+            const scrolled = data?.scroll?.y || window.pageYOffset || 0;
+            const scrollDiff = scrolled - lastScrollY;
 
-                    if (Math.abs(scrollDiff) > 3) {
-                        const newDirection = scrollDiff > 0 ? 'down' : 'up';
+            if (Math.abs(scrollDiff) > 2) { // Sensitivity threshold
+                const newDirection = scrollDiff > 0 ? 'down' : 'up';
+                if (newDirection !== scrollDirection) {
+                    scrollDirection = newDirection;
+                    targetSpeed = scrollDirection === 'up' ? 0.8 : -0.8;
+                }
+            }
+            lastScrollY = scrolled;
+        };
 
-                        if (newDirection !== scrollDirection) {
-                            scrollDirection = newDirection;
-                            targetSpeed = scrollDirection === 'up' ? 0.8 : -0.8;
-                        }
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    // Start animation and listeners when visible
+                    if (window.locomotive) {
+                        window.locomotive.on('scroll', handleScroll);
+                    } else {
+                        window.addEventListener('scroll', handleScroll, { passive: true });
                     }
+                    animationId = requestAnimationFrame(animateMarquee);
+                } else {
+                    // Stop animation and listeners when not visible
+                    if (animationId) cancelAnimationFrame(animationId);
+                    animationId = null;
+                    if (window.locomotive) {
+                        try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
+                    }
+                    window.removeEventListener('scroll', handleScroll);
+                }
+            },
+            { threshold: 0.1 }
+        );
 
-                    lastScrollY = scrolled;
-                    ticking = false;
-                });
-                ticking = true;
-            }
-        };
-
-        // Setup listeners
-        const setupScrollListeners = () => {
-            if (window.locomotive) {
-                window.locomotive.on('scroll', handleScroll);
-            } else {
-                window.addEventListener('scroll', handleScroll, { passive: true });
-            }
-            animateMarquee(performance.now());
-        };
-
-        setTimeout(setupScrollListeners, 4000);
+        observer.observe(marqueeElement);
 
         return () => {
+            observer.disconnect();
             if (animationId) cancelAnimationFrame(animationId);
             if (window.locomotive) {
-                try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
+                try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
             }
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
 
+
     // Simple static text rendering - no animations
     const renderSimpleText = (word, colorClass, plClass) => {
         return (
             <div className={plClass}>
-                <h1 className={`text-[20vw] text-left md:text-[15vw] lg:text-[480px] font-black ${colorClass} leading-none tracking-tight select-none`}>
+                <h1 className={`text-[24vw] sm:text-[22vw] md:text-[15vw] lg:text-[480px] font-black ${colorClass} leading-none tracking-tight select-none`}>
                     {word}
                 </h1>
             </div>
@@ -199,20 +181,16 @@ export default function Page() {
 
     return (
         <main className="bg-gray-100 min-h-screen overflow-hidden">
-            {/* Move Navigation OUTSIDE the transformed wrapper */}
-            <Navigation />
-
-            {/* ——— KEEP these OUTSIDE the transformed wrapper ——— */}
-            {/* Text that moves with shutter */}
+            {/* Text that moves with shutter - Increased z-index */}
             <div
                 className={`
-                fixed z-101
+                fixed z-[201]
                 transition-transform duration-[4500ms]
-                ${reveal ? "translate-y-[-100vh]" : ""}
+                ${isLoaded ? "translate-y-[-100vh]" : ""}
                 `}
                 style={{
                     top: '50vh', left: '50vw',
-                    transform: reveal
+                    transform: isLoaded
                         ? 'translate(-50%, -50%) translateY(-100vh)'
                         : 'translate(-50%, -50%)'
                 }}
@@ -222,17 +200,17 @@ export default function Page() {
                 </h1>
             </div>
 
-            {/* SVG Shutter overlay */}
-            <div className="fixed inset-0 z-50 flex items-center justify-center shutter-overlay">
+            {/* SVG Shutter overlay - z-index is 200 */}
+            <div className="fixed inset-0 z-[200] flex items-center justify-center shutter-overlay">
                 <svg
                     width="100%" height="100%"
                     viewBox="0 0 1000 1000" preserveAspectRatio="none"
-                    className={`absolute top-0 left-0 w-full h-full duration-3000 shutter-svg ${reveal ? "shutter-animate" : ""}`}
+                    className={`absolute top-0 left-0 w-full h-full duration-3000 shutter-svg ${isLoaded ? "shutter-animate" : ""}`}
                 >
                     <path
                         id="shutterPath" fill="#18181b"
                         d={
-                            reveal
+                            isLoaded
                                 ? "M0,-100 L1000,-100 L1000,-100 Q500,-100 0,-100 Z"
                                 : "M0,0 L1000,0 L1000,1000 Q500,1100 0,1000 Z"
                         }
@@ -244,40 +222,42 @@ export default function Page() {
                 className={`
           relative w-full min-h-screen
            duration-[3000ms] ease-in-out
-          ${reveal ? "translate-y-0" : "translate-y-[100vh]"}
+          ${isLoaded ? "translate-y-0" : "translate-y-[100vh]"}
         `}
             >
                 {/* Remove Navigation from here */}
 
                 {/* Main Content Area - Typography Focus */}
-                <div id="home" className="min-h-screen flex justify-center relative bg-gray-100">
-                    {/* Role Badge - Top Right */}
-                    <div className="fixed bottom-32 right-12 z-30">
-                        <div className="text-right">
-                            <div className="text-gray-400 text-sm">↘</div>
-                            <div className="text-gray-900 text-lg font-light">Freelance</div>
-                            <div className="text-gray-900 text-xl font-medium">Designer & Developer</div>
-                            <div className="text-gray-900 text-lg font-light">Based in New Delhi, India</div>
-                        </div>
+                <div id="home" className="min-h-screen flex flex-col justify-center items-start md:flex-row md:justify-center md:items-center relative bg-gray-100 pt-20 md:pt-0 px-4">
+                    {/* Role Badge - Adjusted for responsiveness */}
+                    <div className="absolute bottom-8 left-4 md:fixed md:bottom-32 md:right-12 md:left-auto z-30 text-left md:text-right">
+                        <div className="text-gray-400 text-xs md:text-sm">↘</div>
+                        <div className="text-gray-900 text-sm md:text-lg font-light">Freelance</div>
+                        <div className="text-gray-900 text-base md:text-xl font-medium">Designer & Developer</div>
+                        <div className="text-gray-900 text-sm md:text-lg font-light">Based in New Delhi, India</div>
                     </div>
 
                     {/* Central Typography Layout */}
-                    <div className="relative mt-6 min-w-screen z-20">
-                        {/* Main Name Typography */}
+                    <div className="relative w-full md:w-auto mt-6 min-w-screen z-20">
+                        {/* Main Name Typography - Adjusted for responsiveness */}
                         <div className="overflow-visible">
-                            {renderSimpleText("Arpit", "text-gray-900", "pl-12")}
-                            {renderSimpleText("Raj", "text-gray-400", "pl-6")}
+                            {renderSimpleText("Arpit", "text-gray-900", "pl-0")}
+                            {renderSimpleText("Raj", "text-gray-400", "pl-0")}
                         </div>
                     </div>
-                    <div className="absolute bottom-0 w-[65%] -right-20 z-10">
+                    {/* Image - Adjusted for responsiveness */}
+                    <div className="absolute bottom-0 right-0 w-3/4 max-w-xs sm:max-w-sm md:w-[65%] md:max-w-none md:-right-20 z-10">
                         <img
-                            src="./me.png"
+                            src="/me.png"
                             alt="Arpit Raj"
+                            width={1200}
+                            height={1200}
+                            className="w-full h-auto"
                         />
                     </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
+                <div ref={marqueeRef} className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
                     <div className="marquee-container">
                         <div className="marquee-content">
                             <span className="text-lg font-medium text-white inline-block">
@@ -325,10 +305,10 @@ export default function Page() {
                         <div>
                             <img
                                 src="/fill.png"
-                                alt="Filler Image"
+                                alt="Abstract texture"
                                 width={500}
-                                height={100}
-                                className="w-full h-auto max-h-36 object-cover rounded-lg shadow-lg"
+                                height={200} // Adjusted to match max-h-36
+                                className="w-full h-auto max-h-36 object-cover rounded-lg"
                             />
                             
                             {/* Decorative sketch element below image */}
