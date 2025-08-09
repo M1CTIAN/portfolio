@@ -9,6 +9,22 @@ const Navigation = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Gate navbar until shutter finishes - increased delay
+  const [canShowNav, setCanShowNav] = useState(false);
+  useEffect(() => {
+    let t;
+    if (isLoaded) {
+      // Wait longer for shutter to fully complete and clear the viewport
+      t = setTimeout(() => setCanShowNav(true), 3500); // Increased from 2500 to 3500
+    } else {
+      setCanShowNav(false);
+    }
+    return () => clearTimeout(t);
+  }, [isLoaded]);
+
+  // Remove the fallback timer - rely only on the shutter timing
+  // This prevents conflicts with the shutter animation
+
   // Smooth scroll function that works with Locomotive Scroll
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -51,7 +67,7 @@ const Navigation = () => {
 
     return () => {
       if (window.locomotive) {
-        try { window.locomotive.off('scroll', handleScroll); } catch (e) {}
+        try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
       }
       window.removeEventListener('scroll', handleScroll);
     };
@@ -68,15 +84,14 @@ const Navigation = () => {
 
       {/* Sidebar with SVG shutter animation */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 shadow-2xl z-[90] overflow-hidden transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-        }`}
+        className={`fixed top-0 right-0 h-full w-80 shadow-2xl z-[90] overflow-hidden transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+          }`}
       >
         {/* SVG Shutter Effect */}
         <svg
-          width="100%" 
+          width="100%"
           height="100%"
-          viewBox="0 0 320 1000" 
+          viewBox="0 0 320 1000"
           preserveAspectRatio="none"
           className="absolute inset-0 w-full h-full"
         >
@@ -92,10 +107,9 @@ const Navigation = () => {
         </svg>
 
         {/* Sidebar Content */}
-        <div 
-          className={`relative z-10 p-8 h-full transition-opacity duration-500 ${
-            sidebarOpen ? "opacity-100 delay-300" : "opacity-0"
-          }`}
+        <div
+          className={`relative z-10 p-8 h-full transition-opacity duration-500 ${sidebarOpen ? "opacity-100 delay-300" : "opacity-0"
+            }`}
         >
           {/* Close button */}
           <button
@@ -146,49 +160,139 @@ const Navigation = () => {
     </>
   );
 
+  // Only render when shutter is completely done AND canShowNav is true
+  if (!canShowNav || !isLoaded) {
+    return null;
+  }
+
   return (
-    // This wrapper controls the fade-in of the entire navigation component
-    <div className={`transition-opacity duration-500 delay-1000 ${isLoaded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-      {/* Main Navbar - Hidden on scroll */}
+    <>
+      {/* Main Navbar - Only shows after shutter completely finishes */}
       <nav
-        className={`fixed top-0 left-0 w-full z-40 transition-transform duration-300 ${
-          showPill ? "-translate-y-full" : "translate-y-0"
-        }`}
+        style={{
+          position: 'fixed',
+          top: showPill ? '-80px' : '0',
+          left: '0',
+          width: '100%',
+          height: '60px',
+          backgroundColor: 'rgba(249, 250, 251, 0.0)', // Slightly more transparent
+          backdropFilter: 'blur(12px)',
+          zIndex: 150, // Lower than shutter (z-200) but higher than content
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 40px',
+          transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+          opacity: 1,
+          transform: 'translateY(0)',
+          animation: 'fadeInFromTop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards'
+        }}
       >
-        <div className="px-10 mx-auto py-4">
-          <div className="flex justify-between items-center">
-            <div className="text-lg font-medium text-gray-900">
-              © Code by Arpit
-            </div>
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('home')} className="text-gray-600 hover:text-gray-900">Home</button>
-              <button onClick={() => scrollToSection('about')} className="text-gray-600 hover:text-gray-900">About</button>
-              <button onClick={() => scrollToSection('work')} className="text-gray-600 hover:text-gray-900">Work</button>
-              <button onClick={() => scrollToSection('contact')} className="text-gray-600 hover:text-gray-900">Contact</button>
-            </div>
-          </div>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: '400',
+          color: '#374151',
+          letterSpacing: '0.025em'
+        }}>
+          © Code by Arpit
+        </div>
+        <div style={{ display: 'flex', gap: '48px' }}>
+          {['Home', 'About', 'Work', 'Contact'].map((item, index) => (
+            <button
+              key={item}
+              onClick={() => scrollToSection(item.toLowerCase())}
+              style={{
+                color: '#6B7280',
+                fontSize: '15px',
+                fontWeight: '400',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                position: 'relative',
+                padding: '8px 0',
+                animationDelay: `${0.1 + index * 0.05}s` // Stagger the button animations
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.color = '#111827';
+                e.target.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.color = '#6B7280';
+                e.target.style.transform = 'translateY(0)';
+              }}
+            >
+              {item}
+            </button>
+          ))}
         </div>
       </nav>
 
-      {/* Pill / Hamburger Menu Button - Appears on scroll */}
+      {/* Pill / Hamburger Menu Button */}
       <div
-        className={`fixed top-6 right-6 z-50 transition-all duration-500 ${
-          showPill ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          width: '48px',
+          height: '48px',
+          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(16px)',
+          borderRadius: '50%',
+          border: '1px solid rgba(229, 231, 235, 0.4)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          zIndex: 160, // Also lower than shutter
+          display: showPill ? 'flex' : 'none',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+          opacity: showPill ? 1 : 0,
+          transform: showPill ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.9)'
+        }}
+        onClick={() => setSidebarOpen(true)}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translateY(-2px) scale(1.05)';
+          e.target.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translateY(0) scale(1)';
+          e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
+        }}
       >
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="bg-white/80 backdrop-blur-md shadow-lg rounded-full p-3"
+        <svg
+          width="18"
+          height="18"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          style={{ color: '#374151' }}
         >
-          <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
-          </svg>
-        </button>
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M4 6h16M4 12h16m-7 6h7"
+          />
+        </svg>
       </div>
 
       {/* Sidebar - Mobile Menu */}
       {mounted && createPortal(sidebar, document.body)}
-    </div>
+
+      <style jsx>{`
+        @keyframes fadeInFromTop {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </>
   );
 };
 

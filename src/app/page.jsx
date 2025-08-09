@@ -1,16 +1,12 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { useCursor } from "./context/CursorContext"; // Import the context hook
-import Image from "next/image"; // Import the Next.js Image component
-// import Navigation from "./components/Navigation"; // REMOVE THIS IMPORT
+import { useCursor } from "./context/CursorContext";
 import About from "./components/About";
 import ProjectShowcase from "./components/ProjectsCarousel";
-import Interactive3D from "./components/Interactive3D";
 import "./globals.css";
 
 export default function Page() {
-    const { isLoaded, setIsLoaded } = useCursor(); // Use the global state
-    const [, setScrollDisabled] = useState(true);
+    const { isLoaded, setIsLoaded } = useCursor();
     const [showEmailCopied, setShowEmailCopied] = useState(false);
 
     // Function to copy email to clipboard and show modal
@@ -37,8 +33,6 @@ export default function Page() {
             if (window.locomotive) {
                 window.locomotive.stop();
             } else {
-                // If locomotive is not ready, try again shortly.
-                // This can happen due to initialization order.
                 setTimeout(stopScroll, 50);
             }
         };
@@ -56,7 +50,6 @@ export default function Page() {
 
         // Re-enable scrolling after the animation completes
         const scrollTimer = setTimeout(() => {
-            setScrollDisabled(false);
             startScroll();
         }, animationDuration);
 
@@ -225,8 +218,6 @@ export default function Page() {
           ${isLoaded ? "translate-y-0" : "translate-y-[100vh]"}
         `}
             >
-                {/* Remove Navigation from here */}
-
                 {/* Main Content Area - Typography Focus */}
                 <div id="home" className="min-h-screen flex flex-col justify-center items-start md:flex-row md:justify-center md:items-center relative bg-gray-100 pt-20 md:pt-0 px-4">
                     {/* Role Badge - Adjusted for responsiveness */}

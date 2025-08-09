@@ -13,9 +13,7 @@
     "locomotive-scroll": "^4.1.4",
     "next": "15.3.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-parallax": "^3.5.2",
-    "react-scroll-parallax": "^3.4.5"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
