@@ -1,10 +1,91 @@
 "use client";
-import React from 'react';
+import React, { useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useCursor } from '../context/CursorContext'; // Import the context hook
 
-export default function ProjectsCarousel() {
-    const { setCursorType } = useCursor(); // Get the setter function from context
+// Reusable Project Section Component
+const ProjectSection = ({ project, index }) => {
+    const { setCursorType } = useCursor();
+    const videoRef = useRef(null);
 
+    return (
+        <motion.section 
+            id={`work-${project.id}`}
+            className="relative min-h-[40vh] py-20 px-6 flex items-center justify-center cursor-none overflow-hidden"
+            onMouseEnter={() => setCursorType('hover')}
+            onMouseLeave={() => setCursorType('default')}
+            onViewportEnter={() => videoRef.current?.play()}
+            onViewportLeave={() => videoRef.current?.pause()}
+            viewport={{ amount: 0.3 }} // Play when 40% of the video is visible
+        >
+            {/* Background Video */}
+            <div className="absolute inset-0 w-full h-full z-0">
+                <video
+                    ref={videoRef}
+                    poster={project.image}
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                >
+                    <source src={project.video_webm} type="video/webm" />
+                    <source src={project.video} type="video/mp4" />
+                </video>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/60 to-black/80"></div>
+            </div>
+
+            {/* Content */}
+            <div className="relative z-10 max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-2' : ''}`}></div>
+                    <motion.div 
+                        className={`lg:col-span-7 ${index % 2 === 1 ? 'lg:order-1' : ''}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, amount: 0.5 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                    >
+                        <div className="space-y-6 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                            <div className="flex items-center space-x-4 text-sm text-gray-300">
+                                <span className="font-mono">
+                                    {String(project.id).padStart(2, '0')}
+                                </span>
+                                <span>•</span>
+                                <span>{project.year}</span>
+                            </div>
+                            <h3 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+                                {project.title}
+                            </h3>
+                            <p className="text-gray-200 text-lg leading-relaxed max-w-lg">
+                                {project.description}
+                            </p>
+                            <div className="pt-4">
+                                <a 
+                                    href={project.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center font-medium group-hover:gap-3 gap-2 transition-all duration-300 text-white hover:text-gray-300 cursor-none border border-white/50 hover:bg-white/10 px-4 py-2 rounded-full"
+                                >
+                                    <span>View Project</span>
+                                    <svg 
+                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+        </motion.section>
+    );
+};
+
+export default function ProjectsCarousel() {
     const projects = [
         {
             id: 1,
@@ -12,6 +93,8 @@ export default function ProjectsCarousel() {
             year: "2024",
             description: "Modern website for IIIT Bhopal with a focus on user experience currently under development and deployed in beta phase",
             image: "/p1.png",
+            video: "/p1.mp4",
+            video_webm: "/p1.webm",
             link: "https://iiitbhopal.site"
         },
         {
@@ -20,6 +103,8 @@ export default function ProjectsCarousel() {
             year: "2023",
             description: "The official website for IEEE IIIT Bhopal Student Branch, showcasing events and resources",
             image: "/p2.png",
+            video: "/p2.mp4",
+            video_webm: "/p2.webm",
             link: "https://ieeeiiitbhopalsb.com/"
         },
         {
@@ -28,108 +113,45 @@ export default function ProjectsCarousel() {
             year: "2025",
             description: "AI powered disease(Blight) detection and management system for potato crops, enhancing agricultural productivity",
             image: "/p3.png",
+            video: "/p3.mp4",
+            video_webm: "/p3.webm",
             link: "https://potato-doc.vercel.app/"
         }
     ];
 
     return (
-        <section 
-            id="work" 
-            className="min-h-screen bg-white py-20 px-6 cursor-none" // Add cursor-none here
-        >
-            <div className="max-w-7xl mx-auto">
-                {/* Section Header */}
-                <div className="mb-20">
-                    <div className="flex items-baseline justify-between mb-8">
+        <div className="bg-white">
+            {/* Main Header Section */}
+            <div className="py-20 px-6">
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-8">
                         <h2 className="text-6xl md:text-8xl font-black text-gray-900 tracking-tight">
-                            Projects
+                            My Work
                         </h2>
-                        <div className="text-gray-500 text-sm">
-                            Selected work 2023-2025
-                        </div>
                     </div>
                     <div className="w-24 h-px bg-gray-300"></div>
                 </div>
+            </div>
 
-                {/* Projects Grid */}
-                <div className="space-y-24">
-                    {projects.map((project, index) => (
-                        <div 
-                            key={project.id}
-                            className="group" // cursor-none is inherited from the parent section
-                            onMouseEnter={() => setCursorType('hover')}
-                            onMouseLeave={() => setCursorType('default')}
-                        >
-                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                                {/* Project Image */}
-                                <div className={`lg:col-span-7 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                                    <a 
-                                        href={project.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block cursor-none" // Add cursor-none here
-                                    >
-                                        <div className="relative overflow-hidden bg-gray-100 aspect-[4/3] rounded-sm">
-                                            <img 
-                                                src={project.image}
-                                                alt={project.title}
-                                                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                                            />
-                                            <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity duration-500"></div>
-                                        </div>
-                                    </a>
-                                </div>
-
-                                {/* Project Info */}
-                                <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                                    <div className="space-y-6">
-                                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                                            <span className="font-mono">
-                                                {String(index + 1).padStart(2, '0')}
-                                            </span>
-                                            <span>•</span>
-                                            <span>{project.year}</span>
-                                        </div>
-                                        <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight group-hover:text-gray-600 transition-colors duration-300">
-                                            {project.title}
-                                        </h3>
-                                        <p className="text-gray-600 text-lg leading-relaxed">
-                                            {project.description}
-                                        </p>
-                                        <div className="pt-4">
-                                            <a 
-                                                href={project.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center text-gray-900 font-medium group-hover:gap-3 gap-2 transition-all duration-300 hover:text-gray-600 cursor-none" // Add cursor-none here
-                                            >
-                                                <span>View Project</span>
-                                                <svg 
-                                                    className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
-                                                    fill="none" 
-                                                    stroke="currentColor" 
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                                </svg>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            {/* Project Sections with Separators */}
+            {projects.map((project, index) => (
+                <React.Fragment key={project.id}>
+                    <ProjectSection project={project} index={index} />
+                    {index < projects.length - 1 && (
+                        <div className="relative bg-white h-10">
                         </div>
-                    ))}
-                </div>
+                    )}
+                </React.Fragment>
+            ))}
 
-                {/* Bottom CTA */}
-                <div className="mt-32 text-center">
-                    <div className="inline-flex items-center space-x-4 text-gray-500">
-                        <div className="w-12 h-px bg-gray-300"></div>
-                        <span className="text-sm">More projects coming soon</span>
-                        <div className="w-12 h-px bg-gray-300"></div>
-                    </div>
+            {/* More Projects Coming Soon */}
+            <div className="py-32 text-center bg-white">
+                <div className="inline-flex items-center space-x-4 text-gray-500">
+                    <div className="w-24 h-px bg-gray-300"></div>
+                    <span className="text-sm font-medium tracking-wider uppercase">More projects coming soon</span>
+                    <div className="w-24 h-px bg-gray-300"></div>
                 </div>
             </div>
-        </section>
+        </div>
     );
 }

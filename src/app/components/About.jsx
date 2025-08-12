@@ -1,56 +1,67 @@
+"use client";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useState, useEffect, useMemo } from "react";
 
-// Simplified wiggle path generator with smooth endings
-function getWigglePaths(t, numLines = 8, width = 1200) {
-    const amplitude = 8;
-    const freq = 0.6;
-    const step = 12;
-
-    const halfW = width / 2;
-    const spacing = halfW / (numLines - 1);
-
+// Enhanced wiggle path generation with mouse repulsion
+function getWigglePaths(time, numLines, svgWidth, mouseX, mouseY, svgHeight) {
     const paths = [];
+    const baseHeight = 850;
+    const startX = svgWidth * 0.6;
+    const endX = svgWidth;
+    const rightHalfWidth = endX - startX;
+
     for (let i = 0; i < numLines; i++) {
-        const baseX = halfW + spacing * i;
-        let d = '';
+        const x = startX + (i / (numLines - 1)) * rightHalfWidth;
+        const amplitude = 15 + Math.sin(i * 0.3) * 5;
+        const frequency = 0.008;
+        const phase = time * 0.5;
 
-        // Generate points with fade-out at the end
-        for (let y = 0; y <= 800; y += step) {
-            // Fade out the wiggle amplitude towards the end
-            const fadeOut = Math.max(0, 1 - (y / 800) * 0.8); // Start fading at 20% from end
-            const currentAmplitude = amplitude * fadeOut;
-            
-            const wiggle = Math.sin(t * freq + y / 400 + i * 0.2) * currentAmplitude;
-            const x = baseX + wiggle;
+        let path = `M${x},0`;
+        const steps = Math.max(20, Math.floor(baseHeight / 30));
 
-            if (y === 0) {
-                d = `M${x},${y}`;
-            } else {
-                d += ` L${x},${y}`;
+        for (let y = 0; y <= baseHeight; y += baseHeight / steps) {
+            let offset = Math.sin(y * frequency + phase) * amplitude;
+
+            // Calculate mouse repulsion
+            const mouseDistanceX = mouseX - (x + offset);
+            const mouseDistanceY = mouseY - y;
+            const totalDistance = Math.sqrt(mouseDistanceX * mouseDistanceX + mouseDistanceY * mouseDistanceY);
+
+            // Repulsion parameters
+            const repulsionRadius = 80; // Area of influence
+            const repulsionStrength = 30; // How strong the repulsion is
+
+            if (totalDistance < repulsionRadius && totalDistance > 0) {
+                const repulsionForce = (repulsionRadius - totalDistance) / repulsionRadius;
+                const repulsionIntensity = repulsionForce * repulsionStrength;
+
+                // Push away from mouse
+                const pushX = (mouseDistanceX / totalDistance) * repulsionIntensity * -1;
+                const pushY = (mouseDistanceY / totalDistance) * repulsionIntensity * -1;
+
+                offset += pushX;
+                // You can also add vertical displacement if needed:
+                // const adjustedY = y + pushY;
             }
-        }
-        
-        // Add a smooth curve to center at the end
-        const finalY = 800;
-        const finalX = baseX; // Return to base position
-        d += ` Q${baseX + (amplitude * 0.3)},${finalY - 20} ${finalX},${finalY}`;
-        
-        paths.push(d);
-    }
 
+            path += ` L${x + offset},${y}`;
+        }
+        paths.push(path);
+    }
     return paths;
 }
 
 export default function About() {
     const NUM_LINES = 10;
     const [svgWidth, setSvgWidth] = useState(1200);
+    const [svgHeight, setSvgHeight] = useState(850);
     const [time, setTime] = useState(0);
+    const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 }); // Start off-screen
 
     // Memoize paths to prevent unnecessary recalculations
     const wigglePaths = useMemo(() =>
-        getWigglePaths(time, NUM_LINES, svgWidth),
-        [time, svgWidth]
+        getWigglePaths(time, NUM_LINES, svgWidth, mousePos.x, mousePos.y, svgHeight),
+        [time, svgWidth, mousePos.x, mousePos.y, svgHeight]
     );
 
     useEffect(() => {
@@ -60,6 +71,34 @@ export default function About() {
             const handleResize = () => setSvgWidth(window.innerWidth);
             window.addEventListener("resize", handleResize, { passive: true });
             return () => window.removeEventListener("resize", handleResize);
+        }
+    }, []);
+
+    // Mouse tracking for repulsion effect
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            const aboutSection = document.getElementById('about');
+            if (aboutSection) {
+                const rect = aboutSection.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                setMousePos({ x, y });
+            }
+        };
+
+        const handleMouseLeave = () => {
+            // Move mouse position off-screen when leaving the section
+            setMousePos({ x: -1000, y: -1000 });
+        };
+
+        const aboutSection = document.getElementById('about');
+        if (aboutSection) {
+            aboutSection.addEventListener('mousemove', handleMouseMove, { passive: true });
+            aboutSection.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+            return () => {
+                aboutSection.removeEventListener('mousemove', handleMouseMove);
+                aboutSection.removeEventListener('mouseleave', handleMouseLeave);
+            };
         }
     }, []);
 
@@ -91,20 +130,20 @@ export default function About() {
                 className="absolute inset-0 w-full h-full pointer-events-none opacity-60"
                 width="100%"
                 height="100%"
-                viewBox={`0 0 ${svgWidth} 800`}
+                viewBox={`0 0 ${svgWidth} 850`}
                 preserveAspectRatio="none"
                 fill="none"
             >
                 <defs>
-                    {/* Gradient for fading effect */}
+                    {/* Updated gradient to use website colors */}
                     <linearGradient id="fadeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" stopColor="rgba(99,102,241,0.15)" stopOpacity="1"/>
-                        <stop offset="70%" stopColor="rgba(99,102,241,0.15)" stopOpacity="1"/>
-                        <stop offset="90%" stopColor="rgba(99,102,241,0.08)" stopOpacity="0.5"/>
-                        <stop offset="100%" stopColor="rgba(99,102,241,0.02)" stopOpacity="0.1"/>
+                        <stop offset="0%" stopColor="rgba(107,114,128,0.15)" stopOpacity="1" />
+                        <stop offset="70%" stopColor="rgba(107,114,128,0.15)" stopOpacity="1" />
+                        <stop offset="90%" stopColor="rgba(107,114,128,0.08)" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="rgba(107,114,128,0.02)" stopOpacity="0.1" />
                     </linearGradient>
                 </defs>
-                
+
                 {wigglePaths.map((d, i) => (
                     <path
                         key={i}
@@ -113,13 +152,17 @@ export default function About() {
                         strokeWidth={1.5}
                         fill="none"
                         strokeLinecap="round"
+                        style={{
+                            transition: 'all 0.15s ease-out'
+                        }}
                     />
                 ))}
             </svg>
 
-            {/* Simplified background elements - removed some for performance */}
+
+            {/* Simplified background elements */}
             <motion.div
-                className="absolute top-0 right-0 w-[40%] h-[40%] bg-gray-200 rounded-full opacity-20"
+                className="absolute top-0 right-0 w-[40%] h-[40%] bg-gray-400 rounded-full opacity-10"
                 initial={{ scale: 0.8, x: 100 }}
                 whileInView={{ scale: 1, x: 0 }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
@@ -127,7 +170,7 @@ export default function About() {
             />
 
             <motion.div
-                className="absolute bottom-20 left-20 w-72 h-72 bg-gray-200 rounded-full opacity-15"
+                className="absolute bottom-20 left-20 w-72 h-72 bg-gray-400 rounded-full opacity-10"
                 initial={{ scale: 0.5, y: 100 }}
                 whileInView={{ scale: 1, y: 0 }}
                 transition={{ duration: 1.8, ease: "easeOut", delay: 0.2 }}
@@ -177,7 +220,7 @@ export default function About() {
                                     Problem-solver.
                                 </motion.h2>
                                 <motion.div
-                                    className="absolute bottom-0 left-0 h-1 bg-gray-700"
+                                    className="absolute bottom-0 left-0 h-1 bg-gray-900"
                                     initial={{ width: 0 }}
                                     whileInView={{ width: "75%" }}
                                     transition={{ duration: 1.2, delay: 0.8 }}
@@ -202,7 +245,7 @@ export default function About() {
                             </p>
 
                             <motion.p
-                                className="mt-8 text-lg md:text-xl text-gray-700 leading-relaxed"
+                                className="mt-8 text-lg md:text-xl text-gray-400 leading-relaxed"
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 1, delay: 0.8 }}
@@ -223,7 +266,7 @@ export default function About() {
                                 <motion.a
                                     href="https://www.linkedin.com/in/arpit---raj/"
                                     target="_blank"
-                                    className="px-6 py-3 rounded-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg transition-all duration-200"
+                                    className="px-6 py-3 rounded-full bg-gray-900 hover:bg-gray-400 text-white font-semibold shadow-lg transition-all duration-200"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
@@ -233,7 +276,7 @@ export default function About() {
                                     href="/ArpitRaj_Resume.pdf"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-6 py-3 rounded-full border-2 border-indigo-500 text-indigo-600 bg-white hover:bg-indigo-50 font-semibold shadow-lg transition-all duration-200"
+                                    className="px-6 py-3 rounded-full border-2 border-gray-900 text-gray-900 bg-white hover:bg-gray-100 font-semibold shadow-lg transition-all duration-200"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                 >

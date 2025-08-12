@@ -229,7 +229,7 @@ export default function Page() {
                     </div>
 
                     {/* Central Typography Layout */}
-                    <div className="relative w-full md:w-auto mt-6 min-w-screen z-20">
+                    <div className="relative w-full md:w-auto min-w-screen z-20">
                         {/* Main Name Typography - Adjusted for responsiveness */}
                         <div className="overflow-visible">
                             {renderSimpleText("Arpit", "text-gray-900", "pl-0")}

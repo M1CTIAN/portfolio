@@ -82,12 +82,12 @@ const Navigation = () => {
         onClick={() => setSidebarOpen(false)}
       />
 
-      {/* Sidebar with SVG shutter animation */}
+      {/* Sidebar with SVG bulge shutter animation */}
       <div
         className={`fixed top-0 right-0 h-full w-80 shadow-2xl z-[90] overflow-hidden transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
           }`}
       >
-        {/* SVG Shutter Effect */}
+        {/* SVG Bulge Shutter Effect - Similar to main shutter */}
         <svg
           width="100%"
           height="100%"
@@ -100,7 +100,7 @@ const Navigation = () => {
             d={
               sidebarOpen
                 ? "M0,0 L320,0 L320,1000 L0,1000 Z"
-                : "M320,0 L320,0 L320,1000 Q240,500 320,1000 Z"
+                : "M320,0 L320,0 L320,1000 Q160,500 320,1000 Z"
             }
             className="transition-all duration-700 ease-out"
           />
@@ -211,6 +211,9 @@ const Navigation = () => {
                 transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
                 position: 'relative',
                 padding: '8px 0',
+                opacity: 0,
+                transform: 'translateY(-10px)',
+                animation: 'fadeInFromTop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
                 animationDelay: `${0.1 + index * 0.05}s` // Stagger the button animations
               }}
               onMouseEnter={(e) => {
