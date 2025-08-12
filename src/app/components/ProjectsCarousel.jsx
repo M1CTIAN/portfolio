@@ -11,12 +11,10 @@ const ProjectSection = ({ project, index }) => {
     return (
         <motion.section 
             id={`work-${project.id}`}
-            className="relative min-h-[40vh] py-20 px-6 flex items-center justify-center cursor-none overflow-hidden"
-            onMouseEnter={() => setCursorType('hover')}
-            onMouseLeave={() => setCursorType('default')}
+            className="relative min-h-[40vh] cursor-none overflow-hidden"
             onViewportEnter={() => videoRef.current?.play()}
             onViewportLeave={() => videoRef.current?.pause()}
-            viewport={{ amount: 0.3 }} // Play when 40% of the video is visible
+            viewport={{ amount: 0.3 }} // Play when 30% of the video is visible
         >
             {/* Background Video */}
             <div className="absolute inset-0 w-full h-full z-0">
@@ -34,53 +32,62 @@ const ProjectSection = ({ project, index }) => {
                 <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-black/60 to-black/80"></div>
             </div>
 
-            {/* Content */}
-            <div className="relative z-10 max-w-7xl mx-auto w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-                    <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-2' : ''}`}></div>
-                    <motion.div 
-                        className={`lg:col-span-7 ${index % 2 === 1 ? 'lg:order-1' : ''}`}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.5 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                    >
-                        <div className="space-y-6 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                            <div className="flex items-center space-x-4 text-sm text-gray-300">
-                                <span className="font-mono">
-                                    {String(project.id).padStart(2, '0')}
-                                </span>
-                                <span>•</span>
-                                <span>{project.year}</span>
-                            </div>
-                            <h3 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
-                                {project.title}
-                            </h3>
-                            <p className="text-gray-200 text-lg leading-relaxed max-w-lg">
-                                {project.description}
-                            </p>
-                            <div className="pt-4">
-                                <a 
-                                    href={project.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center font-medium group-hover:gap-3 gap-2 transition-all duration-300 text-white hover:text-gray-300 cursor-none border border-white/50 hover:bg-white/10 px-4 py-2 rounded-full"
-                                >
-                                    <span>View Project</span>
-                                    <svg 
-                                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        viewBox="0 0 24 24"
+            {/* Clickable Link Overlay */}
+            <a
+                href={project.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group absolute inset-0 z-10 flex items-center justify-center py-20 px-6"
+                onMouseEnter={() => setCursorType('hover')}
+                onMouseLeave={() => setCursorType('default')}
+                aria-label={`View project: ${project.title}`}
+            >
+                {/* Content */}
+                <div className="relative max-w-7xl mx-auto w-full">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div className={`lg:col-span-5 ${index % 2 === 1 ? 'lg:order-2' : ''}`}></div>
+                        <motion.div 
+                            className={`lg:col-span-7 ${index % 2 === 1 ? 'lg:order-1' : ''}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, amount: 0.5 }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                        >
+                            <div className="space-y-6 text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                                <div className="flex items-center space-x-4 text-sm text-gray-300">
+                                    <span className="font-mono">
+                                        {String(project.id).padStart(2, '0')}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{project.year}</span>
+                                </div>
+                                <h3 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight">
+                                    {project.title}
+                                </h3>
+                                <p className="text-gray-200 text-lg leading-relaxed max-w-lg">
+                                    {project.description}
+                                </p>
+                                <div className="pt-4">
+                                    {/* This is now a div styled to look like the original link */}
+                                    <div
+                                        className="inline-flex items-center font-medium group-hover:gap-3 gap-2 transition-all duration-300 text-white border border-white/50 group-hover:bg-white/10 px-4 py-2 rounded-full"
                                     >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </a>
+                                        <span>View Project</span>
+                                        <svg 
+                                            className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </div>
                 </div>
-            </div>
+            </a>
         </motion.section>
     );
 };

@@ -22,28 +22,6 @@ function getWigglePaths(time, numLines, svgWidth, mouseX, mouseY, svgHeight) {
         for (let y = 0; y <= baseHeight; y += baseHeight / steps) {
             let offset = Math.sin(y * frequency + phase) * amplitude;
 
-            // Calculate mouse repulsion
-            const mouseDistanceX = mouseX - (x + offset);
-            const mouseDistanceY = mouseY - y;
-            const totalDistance = Math.sqrt(mouseDistanceX * mouseDistanceX + mouseDistanceY * mouseDistanceY);
-
-            // Repulsion parameters
-            const repulsionRadius = 80; // Area of influence
-            const repulsionStrength = 30; // How strong the repulsion is
-
-            if (totalDistance < repulsionRadius && totalDistance > 0) {
-                const repulsionForce = (repulsionRadius - totalDistance) / repulsionRadius;
-                const repulsionIntensity = repulsionForce * repulsionStrength;
-
-                // Push away from mouse
-                const pushX = (mouseDistanceX / totalDistance) * repulsionIntensity * -1;
-                const pushY = (mouseDistanceY / totalDistance) * repulsionIntensity * -1;
-
-                offset += pushX;
-                // You can also add vertical displacement if needed:
-                // const adjustedY = y + pushY;
-            }
-
             path += ` L${x + offset},${y}`;
         }
         paths.push(path);
