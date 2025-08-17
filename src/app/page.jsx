@@ -233,7 +233,7 @@ export default function Page() {
                         {/* Main Name Typography - Adjusted for responsiveness */}
                         <div className="overflow-visible">
                             {renderSimpleText("Arpit", "text-gray-900", "pl-0")}
-                            {renderSimpleText("Ratext-gray-400y-400", "pl-0")}
+                            {renderSimpleText("Raj","text-gray-400", "pl-0")}
                         </div>
                     </div>
                     {/* Image - Adjusted for responsiveness */}
