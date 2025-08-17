@@ -4,6 +4,8 @@ import "./globals.css";
 import Navigation from "./components/Navigation";
 import { CursorProvider } from "./context/CursorContext"; // Import provider
 import CustomCursor from "./components/CustomCursor"; // Import cursor
+import { Analytics } from "@vercel/analytics/next"
+
 
 export default function RootLayout({ children }) {
   const scrollRef = useRef(null);
@@ -21,14 +23,14 @@ export default function RootLayout({ children }) {
         smoothMobile: false, // Use native scrolling on mobile for better performance
         getDirection: true, // Required for the marquee direction change
       });
-      
+
       // Store the instance globally
       window.locomotive = scroll;
-      
+
       // Dispatch custom event when ready
       window.dispatchEvent(new CustomEvent('locomotive-ready'));
     });
-    
+
     return () => {
       if (scroll) {
         scroll.destroy();
