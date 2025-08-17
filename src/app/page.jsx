@@ -8,6 +8,8 @@ import "./globals.css";
 export default function Page() {
     const { isLoaded, setIsLoaded } = useCursor();
     const [showEmailCopied, setShowEmailCopied] = useState(false);
+    const [views, setViews] = useState(0);
+    const [viewsLoading, setViewsLoading] = useState(true);
 
     // Function to copy email to clipboard and show modal
     const copyEmailToClipboard = async () => {
@@ -20,6 +22,48 @@ export default function Page() {
             console.error('Failed to copy email: ', err);
         }
     };
+
+    // Views tracking with Vercel Analytics
+    useEffect(() => {
+        const trackView = async () => {
+            try {
+                // Check if this is a new session
+                const hasVisitedToday = sessionStorage.getItem('visitedToday');
+                
+                if (!hasVisitedToday) {
+                    // Record the view
+                    await fetch('/api/views', { method: 'POST' });
+                    sessionStorage.setItem('visitedToday', 'true');
+                }
+
+                // Fetch current view count
+                const response = await fetch('/api/views');
+                const data = await response.json();
+                
+                if (data.views) {
+                    setViews(data.views);
+                }
+            } catch (error) {
+                console.error('Error tracking views:', error);
+                // Fallback to localStorage method if API fails
+                const currentViews = localStorage.getItem('portfolioViews');
+                let viewCount = currentViews ? parseInt(currentViews, 10) : 0;
+                
+                const hasVisitedToday = sessionStorage.getItem('visitedToday');
+                if (!hasVisitedToday) {
+                    viewCount += 1;
+                    localStorage.setItem('portfolioViews', viewCount.toString());
+                    sessionStorage.setItem('visitedToday', 'true');
+                }
+                
+                setViews(viewCount);
+            } finally {
+                setViewsLoading(false);
+            }
+        };
+
+        trackView();
+    }, []);
 
     // Update this useEffect to use the global state
     useEffect(() => {
@@ -160,7 +204,6 @@ export default function Page() {
         };
     }, []);
 
-
     // Simple static text rendering - no animations
     const renderSimpleText = (word, colorClass, plClass) => {
         return (
@@ -219,7 +262,7 @@ export default function Page() {
         `}
             >
                 {/* Main Content Area - Typography Focus */}
-                <div id="home" className="min-h-screen flex flex-col justify-center items-start md:flex-row md:justify-center md:items-center relative bg-gray-100 pt-20 md:pt-0 px-4">
+                <div id="home" className="min-h-screen flex flex-col justify-center items-start md:flex-row md:justify-center md:items-center relative bg-gray-100 pt-15 md:pt-0 px-4">
                     {/* Role Badge - Adjusted for responsiveness */}
                     <div className="absolute bottom-8 left-4 md:fixed md:bottom-32 md:right-12 md:left-auto z-30 text-left md:text-right">
                         <div className="text-gray-400 text-xs md:text-sm">↘</div>
@@ -229,10 +272,10 @@ export default function Page() {
                     </div>
 
                     {/* Central Typography Layout */}
-                    <div className="relative w-full md:w-auto mt-6 min-w-screen z-20">
+                    <div className="relative w-full md:w-auto min-w-screen z-20">
                         {/* Main Name Typography - Adjusted for responsiveness */}
                         <div className="overflow-visible">
-                            {renderSimpleText("Arpit", "text-gray-900", "pl-0")}
+                            {renderSimpleText("Arpit", "text-gray-900", "pl-6")}
                             {renderSimpleText("Raj","text-gray-400", "pl-0")}
                         </div>
                     </div>
@@ -394,7 +437,17 @@ export default function Page() {
                             </p>
                         </div>
 
-                        <div className="mt-6 md:mt-0">
+                        <div className="mt-6 md:mt-0 text-center md:text-right">
+                            <div className="flex items-center justify-center md:justify-end space-x-4 mb-2">
+                                <div className="text-gray-500 text-sm">
+                                    <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                    {viewsLoading ? (
+                                        <span className="animate-pulse">Loading...</span>
+                                    ) : (
+                                        `${views.toLocaleString()} views`
+                                    )}
+                                </div>
+                            </div>
                             <p className="text-gray-500 text-sm">
                                 © 2025 Built with intention
                             </p>
