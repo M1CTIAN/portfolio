@@ -32,7 +32,7 @@ function getWigglePaths(time, numLines, svgWidth, mouseX, mouseY, svgHeight) {
 export default function About() {
     const NUM_LINES = 10;
     const [svgWidth, setSvgWidth] = useState(1200);
-    const [svgHeight, setSvgHeight] = useState(850);
+    const [svgHeight, ] = useState(850);
     const [time, setTime] = useState(0);
     const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 }); // Start off-screen
 
