@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useEffect } from 'react';
+import '../styles/Hero.css'; // Import custom CSS for Hero component
 // importing image from next
 import Image from 'next/image';
 
@@ -103,8 +104,8 @@ const Hero = () => {
     // Simple static text rendering - no animations
     const renderSimpleText = (word, colorClass, plClass) => {
         return (
-            <div className={plClass}>
-                <h1 className={`text-[24vw] sm:text-[22vw] md:text-[15vw] lg:text-[480px] font-black ${colorClass} leading-none tracking-tight select-none`}>
+            <div className={`${plClass} hero-main`}>
+                <h1 className={`text-[460.8px] font-black ${colorClass} leading-none tracking-tight select-none`}>
                     {word}
                 </h1>
             </div>
@@ -114,32 +115,29 @@ const Hero = () => {
     return (
         <>
             {/* Main Content Area - Typography Focus */}
-            <div id="home" className="min-h-screen flex flex-col justify-center items-start md:flex-row md:justify-center md:items-center relative bg-gray-100 pt-20 md:pt-0 px-4">
+            <div id="home" className="">
                 {/* Role Badge - Adjusted for responsiveness */}
-                <div className="absolute bottom-8 left-4 md:fixed md:bottom-32 md:right-12 md:left-auto z-30 text-left md:text-right">
-                    <div className="text-gray-400 text-xs md:text-sm">↘</div>
-                    <div className="text-gray-900 text-sm md:text-lg font-light">Freelance</div>
-                    <div className="text-gray-900 text-base md:text-xl font-medium">Designer & Developer</div>
-                    <div className="text-gray-900 text-sm md:text-lg font-light">Based in New Delhi, India</div>
+                <div className="absolute bottom-15 w-full z-11 hero-text">
+                    <div className="text-gray-400 text-lg ">↘</div>
+                    <div className="text-gray-900 text-lg font-light">Freelance</div>
+                    <div className="text-gray-900 text-xl font-medium">Designer & Developer</div>
+                    <div className="text-gray-900 text-lg font-light">Based in New Delhi, India</div>
                 </div>
 
                 {/* Central Typography Layout */}
-                <div className="relative w-full md:w-auto pb-20 min-w-screen z-20">
-                    {/* Main Name Typography - Adjusted for responsiveness */}
-                    <div className="overflow-visible">
+                <div className="absolute">
+                    <div className="">
                         {renderSimpleText("Arpit", "text-gray-900", "pl-6")}
                         {renderSimpleText("Raj","text-gray-400", "pl-0")}
                     </div>
                 </div>
                 {/* Image - Adjusted for responsiveness */}
-                <Image
+                <img
                     src="/me.png"
                     alt="Arpit Raj"
-                    width={1200}
+                    width={1300}
                     height={1200}
-                    priority
-                    sizes="(max-width: 768px) 100vw, 65vw"
-                    className="absolute bottom-0 w-[200%] h-[65vh] left-1/2 -translate-x-1/2 object-contain object-bottom md:left-auto md:translate-x-0 md:w-[65%] md:h-auto md:max-w-none md:-right-20 z-30 md:z-10"
+                    className="absolute hero-photo max-w-[1500px] min-h-[1000px] min-w-[1200px] bottom-0 right-0 z-10"
                 />
             </div>
 

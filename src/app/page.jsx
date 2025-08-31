@@ -142,8 +142,8 @@ export default function Page() {
                     <span className="hidden md:inline">
                         Crafting <span className="text-[#f3f4f6]">Digital Magic</span>
                     </span>
-                    <span className="md:hidden">
-                        Hey there!
+                    <span className="md:hidden pb-[5px]">
+                        Hey!<br /> I am Arpit Raj
                     </span>
                 </h1>
             </div>

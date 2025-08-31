@@ -12,7 +12,7 @@ const Navigation = () => {
 
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768); // Tailwind's 'md' breakpoint
+      setIsMobile(window.innerWidth < 1050); // Tailwind's 'md' breakpoint
     };
 
     checkIsMobile();
