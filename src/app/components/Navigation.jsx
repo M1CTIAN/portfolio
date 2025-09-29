@@ -98,15 +98,19 @@ const Navigation = () => {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] transition-opacity duration-300 ${sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
+        className={`fixed inset-0 z-[80] transition-all duration-300 ${
+          sidebarOpen 
+            ? "opacity-100 backdrop-blur-md bg-black/20" 
+            : "opacity-0 pointer-events-none"
+        }`}
         onClick={() => setSidebarOpen(false)}
       />
 
       {/* Sidebar with SVG bulge shutter animation */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 shadow-2xl z-[90] overflow-hidden transition-transform duration-300 ${sidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-          }`}
+        className={`fixed top-0 right-0 h-full w-80 shadow-2xl z-[90] overflow-hidden transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
       >
         {/* SVG Bulge Shutter Effect - Similar to main shutter */}
         <svg
@@ -191,60 +195,24 @@ const Navigation = () => {
       {/* Main Navbar - Only shows on desktop */}
       {!isMobile && (
         <nav
+          className={`fixed left-0 w-full h-[60px] z-[150] flex items-center justify-between px-10 transition-all duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] opacity-100 animate-fadeInFromTop ${
+            showPill ? '-top-20' : 'top-0'
+          }`}
           style={{
-            position: 'fixed',
-            top: showPill ? '-80px' : '0',
-            left: '0',
-            width: '100%',
-            height: '60px',
-            backgroundColor: 'rgba(249, 250, 251, 0.0)', // Slightly more transparent
-            backdropFilter: 'blur(12px)',
-            zIndex: 150, // Lower than shutter (z-200) but higher than content
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 40px',
-            transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-            opacity: 1,
-            transform: 'translateY(0)',
-            animation: 'fadeInFromTop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards'
+            backgroundColor: 'rgba(249, 250, 251, 0.0)', // Custom transparency not available in Tailwind
           }}
         >
-          <div style={{
-            fontSize: '16px',
-            fontWeight: '400',
-            color: '#374151',
-            letterSpacing: '0.025em'
-          }}>
+          <div className="text-base font-normal text-gray-700 tracking-wider">
             © Code by Arpit
           </div>
-          <div style={{ display: 'flex', gap: '48px' }}>
+          <div className="flex mt-4 gap-12">
             {['Home', 'About', 'Work', 'Contact'].map((item, index) => (
               <button
                 key={item}
                 onClick={() => scrollToSection(item.toLowerCase())}
+                className="text-gray-500 text-[15px] font-normal bg-none border-none cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] relative py-2 opacity-0 -translate-y-2.5 animate-fadeInFromTop hover:text-gray-900 hover:-translate-y-0.5"
                 style={{
-                  color: '#6B7280',
-                  fontSize: '15px',
-                  fontWeight: '400',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-                  position: 'relative',
-                  padding: '8px 0',
-                  opacity: 0,
-                  transform: 'translateY(-10px)',
-                  animation: 'fadeInFromTop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards',
-                  animationDelay: `${0.1 + index * 0.05}s` // Stagger the button animations
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.color = '#111827';
-                  e.target.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.color = '#6B7280';
-                  e.target.style.transform = 'translateY(0)';
+                  animationDelay: `${0.1 + index * 0.05}s` // Custom animation delay
                 }}
               >
                 {item}
@@ -256,34 +224,17 @@ const Navigation = () => {
 
       {/* Pill / Hamburger Menu Button */}
       <div
-        style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          width: '48px',
-          height: '48px',
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(16px)',
-          borderRadius: '50%',
-          border: '1px solid rgba(229, 231, 235, 0.4)',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-          zIndex: 160, // Also lower than shutter
-          display: (isMobile || showPill) ? 'flex' : 'none',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
-          opacity: (isMobile || showPill) ? 1 : 0,
-          transform: (isMobile || showPill) ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.9)'
-        }}
+        className={`fixed top-5 right-5 w-12 h-12 bg-white/90 backdrop-blur-2xl rounded-full border border-gray-200/40 shadow-lg z-[160] flex items-center justify-center cursor-pointer transition-all duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:shadow-xl ${
+          (isMobile || showPill) 
+            ? 'opacity-100 translate-y-0 scale-100 flex' 
+            : 'opacity-0 -translate-y-2 scale-90 hidden'
+        }`}
         onClick={() => setSidebarOpen(!sidebarOpen)}
         onMouseEnter={(e) => {
           e.target.style.transform = 'translateY(-2px) scale(1.05)';
-          e.target.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.12)';
         }}
         onMouseLeave={(e) => {
           e.target.style.transform = 'translateY(0) scale(1)';
-          e.target.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.08)';
         }}
       >
         <svg
@@ -292,7 +243,7 @@ const Navigation = () => {
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
-          style={{ color: '#374151' }}
+          className="text-gray-700"
         >
           <path
             strokeLinecap="round"
@@ -316,6 +267,14 @@ const Navigation = () => {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        
+        .animate-fadeInFromTop {
+          animation: fadeInFromTop 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        
+        .animate-fadeInFromTop.delay-1 {
+          animation: fadeInFromTop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       `}</style>
     </>
