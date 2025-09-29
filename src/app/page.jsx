@@ -13,6 +13,7 @@ export default function Page() {
     const [views, setViews] = useState(0);
     const [viewsLoading, setViewsLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
+    const [cssLoaded, setCssLoaded] = useState(false);
 
     useEffect(() => {
         const checkIsMobile = () => {
@@ -36,6 +37,52 @@ export default function Page() {
             console.error('Failed to copy email: ', err);
         }
     };
+
+    // Check for CSS loading
+    useEffect(() => {
+        const checkCSSLoaded = () => {
+            // Method 1: Check if a specific CSS class is applied
+            const testElement = document.createElement('div');
+            testElement.className = 'hero-photo'; // CSS class from Hero.css
+            testElement.style.position = 'absolute';
+            testElement.style.visibility = 'hidden';
+            document.body.appendChild(testElement);
+
+            const styles = window.getComputedStyle(testElement);
+            const cssApplied = styles.getPropertyValue('transform') !== 'none' ||
+                styles.getPropertyValue('left') !== 'auto';
+
+            document.body.removeChild(testElement);
+
+            if (cssApplied) {
+                setCssLoaded(true);
+                return;
+            }
+
+            // Method 2: Check if stylesheets are loaded
+            const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+            let loadedCount = 0;
+
+            const checkStylesheet = (link) => {
+                return new Promise((resolve) => {
+                    if (link.sheet && link.sheet.cssRules) {
+                        resolve(true);
+                    } else {
+                        link.addEventListener('load', () => resolve(true));
+                        link.addEventListener('error', () => resolve(false));
+                    }
+                });
+            };
+
+            Promise.all([...stylesheets].map(checkStylesheet)).then(() => {
+                setCssLoaded(true);
+            });
+        };
+
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(checkCSSLoaded, 100);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Views tracking with Vercel Analytics
     useEffect(() => {
@@ -79,11 +126,31 @@ export default function Page() {
         trackView();
     }, []);
 
-    // Update this useEffect to use the global state
+    // Updated useEffect to wait for both time and CSS loading
     useEffect(() => {
         if (isLoaded) return; // Prevent this from running more than once
 
-        const timer = setTimeout(() => setIsLoaded(true), 1000);
+        // Wait for both conditions: minimum time elapsed AND CSS loaded
+        const timer = setTimeout(() => {
+            if (cssLoaded) {
+                setIsLoaded(true);
+            } else {
+                // If CSS not loaded yet, wait for it
+                const cssWatcher = setInterval(() => {
+                    if (cssLoaded) {
+                        setIsLoaded(true);
+                        clearInterval(cssWatcher);
+                    }
+                }, 50);
+
+                // Failsafe: force load after maximum wait time
+                setTimeout(() => {
+                    setIsLoaded(true);
+                    clearInterval(cssWatcher);
+                }, 3000);
+            }
+        }, 1000);
+
         const animationDuration = isMobile ? 1000 : 2800; // Adjust duration for mobile
 
         // Function to safely stop locomotive scroll
@@ -120,7 +187,7 @@ export default function Page() {
                 try { window.locomotive.start(); } catch (e) { }
             }
         };
-    }, [isLoaded, setIsLoaded, isMobile]); // Empty dependency array ensures this runs only once
+    }, [isLoaded, setIsLoaded, isMobile, cssLoaded]); // Added cssLoaded dependency
 
     return (
         <main className="bg-gray-100 min-h-screen overflow-hidden">
@@ -131,7 +198,7 @@ export default function Page() {
                 transition-transform duration-[2250ms] md:duration-[4500ms]
                 ${isLoaded ? "translate-y-[-100vh]" : ""}
                 `}
-                style={{ 
+                style={{
                     top: '50vh', left: '50vw',
                     transform: isLoaded
                         ? 'translate(-50%, -50%) translateY(-100vh)'
