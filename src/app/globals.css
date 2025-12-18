@@ -1,5 +1,13 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "locomotive-scroll/dist/locomotive-scroll.css";
+
+/* Hide navbar when projects page is open */
+body.hide-navbar .navigation-container {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
 
 @keyframes fadeinup {
   0% {
@@ -44,6 +52,20 @@
 
 .animate-slideInRight {
   animation: slideInRight 0.3s ease-out forwards;
+}
+
+/* Slide in from right animation for Projects page */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideInFromRight {
+  animation: slideInFromRight 0.5s ease-out forwards;
 }
 
 

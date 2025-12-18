@@ -1,8 +1,11 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCursor } from "./context/CursorContext";
 import About from "./components/About";
 import ProjectShowcase from "./components/ProjectsCarousel";
+import ProjectsPage from "./components/ProjectsPage";
 import Hero from "./components/Hero";
 import Contact from "./components/Contact";
 import "./globals.css";
@@ -10,10 +13,24 @@ import "./globals.css";
 export default function Page() {
     const { isLoaded, setIsLoaded } = useCursor();
     const [showEmailCopied, setShowEmailCopied] = useState(false);
-    const [views, setViews] = useState(0);
-    const [viewsLoading, setViewsLoading] = useState(true);
     const [isMobile, setIsMobile] = useState(false);
     const [cssLoaded, setCssLoaded] = useState(false);
+    const [showProjectsPage, setShowProjectsPage] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Hide navbar when projects page is open
+    useEffect(() => {
+        if (showProjectsPage) {
+            document.body.classList.add('hide-navbar');
+        } else {
+            document.body.classList.remove('hide-navbar');
+        }
+        return () => document.body.classList.remove('hide-navbar');
+    }, [showProjectsPage]);
 
     useEffect(() => {
         const checkIsMobile = () => {
@@ -84,47 +101,7 @@ export default function Page() {
         return () => clearTimeout(timer);
     }, []);
 
-    // Views tracking with Vercel Analytics
-    useEffect(() => {
-        const trackView = async () => {
-            try {
-                // Check if this is a new session
-                const hasVisitedToday = sessionStorage.getItem('visitedToday');
 
-                if (!hasVisitedToday) {
-                    // Record the view
-                    await fetch('/api/views', { method: 'POST' });
-                    sessionStorage.setItem('visitedToday', 'true');
-                }
-
-                // Fetch current view count
-                const response = await fetch('/api/views');
-                const data = await response.json();
-
-                if (data.views) {
-                    setViews(data.views);
-                }
-            } catch (error) {
-                console.error('Error tracking views:', error);
-                // Fallback to localStorage method if API fails
-                const currentViews = localStorage.getItem('portfolioViews');
-                let viewCount = currentViews ? parseInt(currentViews, 10) : 0;
-
-                const hasVisitedToday = sessionStorage.getItem('visitedToday');
-                if (!hasVisitedToday) {
-                    viewCount += 1;
-                    localStorage.setItem('portfolioViews', viewCount.toString());
-                    sessionStorage.setItem('visitedToday', 'true');
-                }
-
-                setViews(viewCount);
-            } finally {
-                setViewsLoading(false);
-            }
-        };
-
-        trackView();
-    }, []);
 
     // Updated useEffect to wait for both time and CSS loading
     useEffect(() => {
@@ -189,8 +166,24 @@ export default function Page() {
         };
     }, [isLoaded, setIsLoaded, isMobile, cssLoaded]); // Added cssLoaded dependency
 
+    const openProjectsPage = () => {
+        setShowProjectsPage(true);
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeProjectsPage = () => {
+        setShowProjectsPage(false);
+        document.body.style.overflow = '';
+    };
+
     return (
-        <main className="bg-gray-100 min-h-screen overflow-hidden">
+        <div className="relative overflow-hidden">
+            {/* Main Website Container */}
+            <motion.main 
+                className="bg-gray-100 min-h-screen"
+                animate={{ x: showProjectsPage ? "-100%" : "0%" }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
             {/* Text that moves with shutter - Increased z-index */}
             <div
                 className={`
@@ -207,7 +200,7 @@ export default function Page() {
             >
                 <h1 className="text-5xl md:text-7xl font-extrabold text-[#d1d5db] drop-shadow-xl animate-fadeinup text-center md:text-left">
                     <span className="hidden md:inline">
-                        Crafting <span className="text-[#f3f4f6]">Digital Magic</span>
+                        Hi !
                     </span>
                     <span className="md:hidden pb-[5px]">
                         Hey!<br /> I am Arpit Raj
@@ -216,7 +209,7 @@ export default function Page() {
             </div>
 
             {/* SVG Shutter overlay - z-index is 200 */}
-            <div className="fixed inset-0 z-[200] flex items-center justify-center shutter-overlay">
+            <div className={`fixed inset-0 z-[200] flex items-center justify-center shutter-overlay ${isLoaded ? 'pointer-events-none' : ''}`}>
                 <svg
                     width="100%" height="100%"
                     viewBox="0 0 1000 1000" preserveAspectRatio="none"
@@ -246,7 +239,7 @@ export default function Page() {
                 <About />
             </div>
             <div id="work">
-                <ProjectShowcase />
+                <ProjectShowcase onViewAllClick={openProjectsPage} />
             </div>
 
             <Contact
@@ -266,15 +259,6 @@ export default function Page() {
                         </div>
 
                         <div className="mt-6 md:mt-0 text-center md:text-right">
-                            <div className="flex items-center justify-center md:justify-end space-x-4 mb-2">
-                                <div className="text-gray-500 text-sm">
-                                    {viewsLoading ? (
-                                        <span className="animate-pulse">Loading...</span>
-                                    ) : (
-                                        `${views.toLocaleString()} views`
-                                    )}
-                                </div>
-                            </div>
                             <p className="text-gray-500 text-sm">
                                 © 2025 Built with intention
                             </p>
@@ -282,6 +266,27 @@ export default function Page() {
                     </div>
                 </div>
             </footer>
-        </main>
+        </motion.main>
+
+            {/* Projects Page - Slides in from right */}
+            {mounted && createPortal(
+                <AnimatePresence>
+                    {showProjectsPage && (
+                        <motion.div 
+                            key="projects-page"
+                            className="fixed top-0 left-0 w-full h-[100dvh] overflow-y-auto bg-white"
+                            style={{ zIndex: 9999 }}
+                            initial={{ x: "100%" }}
+                            animate={{ x: "0%" }}
+                            exit={{ x: "100%" }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            <ProjectsPage onClose={closeProjectsPage} />
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
+        </div>
     );
 }

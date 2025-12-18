@@ -133,7 +133,7 @@ const Hero = () => {
                 </div>
                 {/* Image - Adjusted for responsiveness */}
                 <img
-                    src="/me.png"
+                    src="/me2.png"
                     alt="Arpit Raj"
                     width={1300}
                     height={1200}

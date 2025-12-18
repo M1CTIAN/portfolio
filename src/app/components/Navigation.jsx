@@ -100,7 +100,7 @@ const Navigation = () => {
       <div
         className={`fixed inset-0 z-[80] transition-all duration-300 ${
           sidebarOpen 
-            ? "opacity-100 backdrop-blur-md bg-black/20" 
+            ? "opacity-100 backdrop-blur-md bg-gray-900/20" 
             : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setSidebarOpen(false)}
@@ -191,7 +191,7 @@ const Navigation = () => {
   }
 
   return (
-    <>
+    <div className="navigation-container">
       {/* Main Navbar - Only shows on desktop */}
       {!isMobile && (
         <nav
@@ -277,7 +277,7 @@ const Navigation = () => {
           animation: fadeInFromTop 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
       `}</style>
-    </>
+    </div>
   );
 };
 

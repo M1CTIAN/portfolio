@@ -33,4 +33,16 @@
     }
 }
 
+/* Wave animation for the hand emoji */
+@keyframes wave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    50% { transform: rotate(-10deg); }
+    75% { transform: rotate(20deg); }
+}
+
+.animate-wave {
+    animation: wave 1.5s ease-in-out infinite;
+}
+
 

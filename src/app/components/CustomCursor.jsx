@@ -72,7 +72,7 @@ const CustomCursor = () => {
       {/* Dot - This follows the cursor precisely */}
       <div
         ref={dotRef}
-        className="pointer-events-none fixed z-[999] h-2 w-2 rounded-full bg-black transition-transform duration-300"
+        className="pointer-events-none fixed z-[999] h-2 w-2 rounded-full bg-gray-900 transition-transform duration-300"
         style={{
           transform: `translate(-50%, -50%) scale(${isHovering ? 0 : 1})`,
         }}
