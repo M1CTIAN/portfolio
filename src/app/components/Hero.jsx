@@ -6,70 +6,111 @@ import '../styles/Hero.css'; // Import custom CSS for Hero component
 import Image from 'next/image';
 
 const wrap = (min, max, v) => {
-  const rangeSize = max - min;
-  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+    const rangeSize = max - min;
+    return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
 };
 
 const Hero = () => {
-    const baseX = useMotionValue(0);
-    const scrollY = useMotionValue(0);
-    const scrollVelocity = useVelocity(scrollY);
-    const smoothVelocity = useSpring(scrollVelocity, {
-        damping: 50,
-        stiffness: 400
-    });
-    const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 5], {
-        clamp: false
-    });
+    const marqueeRef = useRef(null);
 
-    const x = useTransform(baseX, (v) => `${wrap(0, -50, v)}%`);
-
-    const directionFactor = useRef(1);
-    const smoothedDirection = useRef(1);
-
-    useAnimationFrame((t, delta) => {
-        // Change direction based on scroll velocity
-        if (velocityFactor.get() < 0) {
-            directionFactor.current = -1;
-        } else if (velocityFactor.get() > 0) {
-            directionFactor.current = 1;
-        }
-
-        // Smoothly interpolate the direction to prevent sudden jumps
-        smoothedDirection.current += (directionFactor.current - smoothedDirection.current) * 0.05;
-
-        // Movement = (Smoothed Base Direction * Base Speed) + (Scroll Velocity * Influence)
-        let moveBy = (smoothedDirection.current * 2 + velocityFactor.get() * 2) * (delta / 1000);
-
-        baseX.set(baseX.get() + moveBy);
-    });
-
-    // Connect Locomotive Scroll to Framer Motion
+    // Optimized, Intersection-Aware Marquee Animation
     useEffect(() => {
-        const handleScroll = (data) => {
-            const y = data?.scroll?.y || window.pageYOffset || 0;
-            scrollY.set(y);
+        const marqueeElement = marqueeRef.current;
+        if (!marqueeElement) return;
+
+        let lastScrollY = 0;
+        let scrollDirection = 'down';
+        let targetSpeed = -0.8;
+        let currentSpeed = -0.8;
+        let offset = 0;
+        let animationId = null;
+
+        const marqueeContent = marqueeElement.querySelector('.marquee-content');
+        if (!marqueeContent) return;
+
+        let singleContentWidth = 0;
+
+        const animateMarquee = () => {
+            // Lazily calculate width on the first frame to ensure it's not 0
+            if (singleContentWidth === 0) {
+                singleContentWidth = marqueeContent.scrollWidth / 2;
+                if (singleContentWidth === 0) {
+                    animationId = requestAnimationFrame(animateMarquee);
+                    return; // Wait for next frame if width is not ready
+                }
+            }
+
+            // Smooth speed transition using linear interpolation
+            const lerpFactor = 0.05;
+            currentSpeed += (targetSpeed - currentSpeed) * lerpFactor;
+            offset += currentSpeed;
+
+            // Correct, seamless loop logic for both directions
+            if (currentSpeed < 0 && offset <= -singleContentWidth) {
+                // If moving left and passed one full content width, loop back
+                offset += singleContentWidth;
+            } else if (currentSpeed > 0 && offset >= 0) {
+                // If moving right and returned to the start, loop back
+                offset -= singleContentWidth;
+            }
+
+            marqueeContent.style.transform = `translateX(${offset}px)`;
+            animationId = requestAnimationFrame(animateMarquee);
         };
 
-        if (window.locomotive) {
-            window.locomotive.on('scroll', handleScroll);
-        } else {
-            window.addEventListener('scroll', handleScroll, { passive: true });
-        }
+        const handleScroll = (data) => {
+            const scrolled = data?.scroll?.y || window.pageYOffset || 0;
+            const scrollDiff = scrolled - lastScrollY;
+
+            if (Math.abs(scrollDiff) > 2) { // Sensitivity threshold
+                const newDirection = scrollDiff > 0 ? 'down' : 'up';
+                if (newDirection !== scrollDirection) {
+                    scrollDirection = newDirection;
+                    targetSpeed = scrollDirection === 'up' ? 0.8 : -0.8;
+                }
+            }
+            lastScrollY = scrolled;
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    // Start animation and listeners when visible
+                    if (window.locomotive) {
+                        window.locomotive.on('scroll', handleScroll);
+                    } else {
+                        window.addEventListener('scroll', handleScroll, { passive: true });
+                    }
+                    animationId = requestAnimationFrame(animateMarquee);
+                } else {
+                    // Stop animation and listeners when not visible
+                    if (animationId) cancelAnimationFrame(animationId);
+                    animationId = null;
+                    if (window.locomotive) {
+                        try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
+                    }
+                    window.removeEventListener('scroll', handleScroll);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observer.observe(marqueeElement);
 
         return () => {
+            observer.disconnect();
+            if (animationId) cancelAnimationFrame(animationId);
             if (window.locomotive) {
                 try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
             }
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [scrollY]);
-
+    }, []);
     // Simple static text rendering - no animations
     const renderSimpleText = (word, colorClass, plClass) => {
         return (
             <div className={`${plClass} hero-main`}>
-                <h1 className={`text-[460.8px] font-black ${colorClass} leading-none tracking-tight select-none`}>
+                <h1 className={`text-[24vw] font-black ${colorClass} leading-none tracking-tight select-none`}>
                     {word}
                 </h1>
             </div>
@@ -92,7 +133,7 @@ const Hero = () => {
                 <div className="absolute">
                     <div className="">
                         {renderSimpleText("Arpit", "text-gray-900", "pl-6")}
-                        {renderSimpleText("Raj","text-gray-400", "pl-0")}
+                        {renderSimpleText("Raj", "text-gray-400", "pl-0")}
                     </div>
                 </div>
                 {/* Image - Adjusted for responsiveness */}
@@ -101,20 +142,20 @@ const Hero = () => {
                     alt="Arpit Raj"
                     width={1300}
                     height={1200}
-                    className="absolute hero-photo max-w-[1500px] min-h-[1000px] min-w-[1200px] bottom-0 right-0 z-10"
+                    className="absolute bottom-0 right-0 z-10 w-[120vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] h-auto object-contain pointer-events-none"
                 />
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
-                <div className="marquee-container flex whitespace-nowrap">
-                    <motion.div className="marquee-content flex whitespace-nowrap" style={{ x }}>
-                        <span className="text-lg font-medium text-white inline-block mr-4">
+            <div ref={marqueeRef} className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
+                <div className="marquee-container">
+                    <div className="marquee-content">
+                        <span className="text-lg font-medium text-white inline-block">
                             CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
                         </span>
-                        <span className="text-lg font-medium text-white inline-block mr-4">
+                        <span className="text-lg font-medium text-white inline-block">
                             CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
                         </span>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </>
