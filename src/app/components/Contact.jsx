@@ -1,5 +1,37 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+
+const RollingText = ({ children, revealText, className }) => {
+    const letters = children.split("");
+    const revealLetters = (revealText || children).split("");
+
+    return (
+        <span className={`relative inline-block overflow-hidden cursor-pointer group align-bottom ${className}`}>
+            <div className="flex">
+                {letters.map((char, i) => (
+                    <span 
+                        key={i} 
+                        className="relative flex flex-col" 
+                    >
+                        <span 
+                            className="group-hover:-translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)]"
+                            style={{ transitionDelay: `${i * 0.03}s` }}
+                        >
+                            {char === " " ? "\u00A0" : char}
+                        </span>
+                        <span 
+                            className="absolute top-full left-0 group-hover:-translate-y-full transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] text-gray-900 font-serif italic"
+                            style={{ transitionDelay: `${i * 0.03}s` }}
+                        >
+                            {revealLetters[i] ? (revealLetters[i] === " " ? "\u00A0" : revealLetters[i]) : ""}
+                        </span>
+                    </span>
+                ))}
+            </div>
+        </span>
+    );
+};
 
 const Contact = ({ copyEmailToClipboard, showEmailCopied }) => {
     return (
@@ -67,7 +99,9 @@ const Contact = ({ copyEmailToClipboard, showEmailCopied }) => {
                     <div className="text-center mb-16">
                         <h3 className="text-6xl md:text-8xl lg:text-9xl font-black text-gray-900 leading-none tracking-tight">
                             Build the world with{' '}
-                            <span className="italic font-sans text-gray-600">intention</span>
+                            <span className="italic font-sans text-gray-600">
+                                <RollingText revealText="intention">intention</RollingText>
+                            </span>
                         </h3>
                     </div>
 

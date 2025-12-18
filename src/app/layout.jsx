@@ -50,7 +50,7 @@ export default function RootLayout({ children }) {
           <div data-scroll-container ref={scrollRef}>
             {children}
           </div>
-          <Analytics />
+          <Analytics debug={false} />
         </body>
       </CursorProvider>
     </html>

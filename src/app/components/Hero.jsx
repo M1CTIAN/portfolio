@@ -1,105 +1,69 @@
 "use client";
 import React, { useRef, useEffect } from 'react';
+import { motion, useSpring, useTransform, useMotionValue, useVelocity, useAnimationFrame } from 'framer-motion';
 import '../styles/Hero.css'; // Import custom CSS for Hero component
 // importing image from next
 import Image from 'next/image';
 
+const wrap = (min, max, v) => {
+  const rangeSize = max - min;
+  return ((((v - min) % rangeSize) + rangeSize) % rangeSize) + min;
+};
+
 const Hero = () => {
-    const marqueeRef = useRef(null);
+    const baseX = useMotionValue(0);
+    const scrollY = useMotionValue(0);
+    const scrollVelocity = useVelocity(scrollY);
+    const smoothVelocity = useSpring(scrollVelocity, {
+        damping: 50,
+        stiffness: 400
+    });
+    const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 5], {
+        clamp: false
+    });
 
-    // Optimized, Intersection-Aware Marquee Animation
+    const x = useTransform(baseX, (v) => `${wrap(0, -50, v)}%`);
+
+    const directionFactor = useRef(1);
+    const smoothedDirection = useRef(1);
+
+    useAnimationFrame((t, delta) => {
+        // Change direction based on scroll velocity
+        if (velocityFactor.get() < 0) {
+            directionFactor.current = -1;
+        } else if (velocityFactor.get() > 0) {
+            directionFactor.current = 1;
+        }
+
+        // Smoothly interpolate the direction to prevent sudden jumps
+        smoothedDirection.current += (directionFactor.current - smoothedDirection.current) * 0.05;
+
+        // Movement = (Smoothed Base Direction * Base Speed) + (Scroll Velocity * Influence)
+        let moveBy = (smoothedDirection.current * 2 + velocityFactor.get() * 2) * (delta / 1000);
+
+        baseX.set(baseX.get() + moveBy);
+    });
+
+    // Connect Locomotive Scroll to Framer Motion
     useEffect(() => {
-        const marqueeElement = marqueeRef.current;
-        if (!marqueeElement) return;
-
-        let lastScrollY = 0;
-        let scrollDirection = 'down';
-        let targetSpeed = -0.8;
-        let currentSpeed = -0.8;
-        let offset = 0;
-        let animationId = null;
-
-        const marqueeContent = marqueeElement.querySelector('.marquee-content');
-        if (!marqueeContent) return;
-
-        let singleContentWidth = 0;
-
-        const animateMarquee = () => {
-            // Lazily calculate width on the first frame to ensure it's not 0
-            if (singleContentWidth === 0) {
-                singleContentWidth = marqueeContent.scrollWidth / 2;
-                if (singleContentWidth === 0) {
-                    animationId = requestAnimationFrame(animateMarquee);
-                    return; // Wait for next frame if width is not ready
-                }
-            }
-
-            // Smooth speed transition using linear interpolation
-            const lerpFactor = 0.05;
-            currentSpeed += (targetSpeed - currentSpeed) * lerpFactor;
-            offset += currentSpeed;
-
-            // Correct, seamless loop logic for both directions
-            if (currentSpeed < 0 && offset <= -singleContentWidth) {
-                // If moving left and passed one full content width, loop back
-                offset += singleContentWidth;
-            } else if (currentSpeed > 0 && offset >= 0) {
-                // If moving right and returned to the start, loop back
-                offset -= singleContentWidth;
-            }
-
-            marqueeContent.style.transform = `translateX(${offset}px)`;
-            animationId = requestAnimationFrame(animateMarquee);
-        };
-
         const handleScroll = (data) => {
-            const scrolled = data?.scroll?.y || window.pageYOffset || 0;
-            const scrollDiff = scrolled - lastScrollY;
-
-            if (Math.abs(scrollDiff) > 2) { // Sensitivity threshold
-                const newDirection = scrollDiff > 0 ? 'down' : 'up';
-                if (newDirection !== scrollDirection) {
-                    scrollDirection = newDirection;
-                    targetSpeed = scrollDirection === 'up' ? 0.8 : -0.8;
-                }
-            }
-            lastScrollY = scrolled;
+            const y = data?.scroll?.y || window.pageYOffset || 0;
+            scrollY.set(y);
         };
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting) {
-                    // Start animation and listeners when visible
-                    if (window.locomotive) {
-                        window.locomotive.on('scroll', handleScroll);
-                    } else {
-                        window.addEventListener('scroll', handleScroll, { passive: true });
-                    }
-                    animationId = requestAnimationFrame(animateMarquee);
-                } else {
-                    // Stop animation and listeners when not visible
-                    if (animationId) cancelAnimationFrame(animationId);
-                    animationId = null;
-                    if (window.locomotive) {
-                        try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
-                    }
-                    window.removeEventListener('scroll', handleScroll);
-                }
-            },
-            { threshold: 0.1 }
-        );
-
-        observer.observe(marqueeElement);
+        if (window.locomotive) {
+            window.locomotive.on('scroll', handleScroll);
+        } else {
+            window.addEventListener('scroll', handleScroll, { passive: true });
+        }
 
         return () => {
-            observer.disconnect();
-            if (animationId) cancelAnimationFrame(animationId);
             if (window.locomotive) {
                 try { window.locomotive.off('scroll', handleScroll); } catch (e) { }
             }
             window.removeEventListener('scroll', handleScroll);
         };
-    }, []);
+    }, [scrollY]);
 
     // Simple static text rendering - no animations
     const renderSimpleText = (word, colorClass, plClass) => {
@@ -141,16 +105,16 @@ const Hero = () => {
                 />
             </div>
 
-            <div ref={marqueeRef} className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
-                <div className="marquee-container">
-                    <div className="marquee-content">
-                        <span className="text-lg font-medium text-white inline-block">
+            <div className="absolute bottom-0 left-0 w-full overflow-hidden bg-gray-900 z-20 py-3">
+                <div className="marquee-container flex whitespace-nowrap">
+                    <motion.div className="marquee-content flex whitespace-nowrap" style={{ x }}>
+                        <span className="text-lg font-medium text-white inline-block mr-4">
                             CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
                         </span>
-                        <span className="text-lg font-medium text-white inline-block">
+                        <span className="text-lg font-medium text-white inline-block mr-4">
                             CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES • CREATIVE DEVELOPER • PORTFOLIO SHOWCASE • WEB DESIGN • INTERACTIVE EXPERIENCES •
                         </span>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </>

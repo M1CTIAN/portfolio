@@ -235,7 +235,7 @@ export default function Page() {
             >
                 <Hero />
             </div>
-            <div id="about">
+            <div id="about" className="relative">
                 <About />
             </div>
             <div id="work">

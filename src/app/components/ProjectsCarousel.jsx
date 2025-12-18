@@ -26,7 +26,6 @@ const ProjectCard = ({ project, className, isHovered }) => {
                     playsInline
                     className="w-full h-full object-cover"
                 >
-                    <source src={project.video_webm} type="video/webm" />
                     <source src={project.video} type="video/mp4" />
                 </video>
             </div>
@@ -86,7 +85,6 @@ export default function ProjectsCarousel({ onViewAllClick }) {
             description: "Modern website for IIIT Bhopal with a focus on user experience currently under development.",
             image: "/p1.png",
             video: "/p1.mp4",
-            video_webm: "/p1.webm",
             link: "https://iiitbhopal.site"
         },
         {
@@ -96,7 +94,6 @@ export default function ProjectsCarousel({ onViewAllClick }) {
             description: "The official website for IEEE IIIT Bhopal Student Branch, showcasing events and resources.",
             image: "/p2.png",
             video: "/p2.mp4",
-            video_webm: "/p2.webm",
             link: "https://ieeeiiitbhopalsb.com/"
         },
         {
@@ -106,7 +103,6 @@ export default function ProjectsCarousel({ onViewAllClick }) {
             description: "AI powered disease detection and management system for potato crops.",
             image: "/p3.png",
             video: "/p3.mp4",
-            video_webm: "/p3.webm",
             link: "https://potato-doc.vercel.app/"
         }
     ];
