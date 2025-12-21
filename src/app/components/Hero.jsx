@@ -142,7 +142,15 @@ const Hero = () => {
                     alt="Arpit Raj"
                     width={1300}
                     height={1200}
-                    className="absolute bottom-0 right-0 z-10 w-[120vw] md:w-[80vw] lg:w-[70vw] xl:w-[60vw] h-auto object-contain pointer-events-none"
+                    className={
+                        "absolute bottom-0 z-10 pointer-events-none object-cover " +
+                        // MOBILE & TABLET (0px to 1199px)
+                        "left-1/2 -translate-x-1/2 w-auto h-[125vh] sm:h-[125vh] " +
+                        // DESKTOP (1200px and up - Restores your original layout)
+                        "min-[1200px]:left-2/5 min-[1200px]:translate-x-0 min-[1200px]:right-0 " +
+                        "min-[1200px]:h-auto min-[1200px]:w-[70vw] xl:w-[60vw] max-w-none"
+                    }
+                    style={{ transformOrigin: 'center bottom' }}
                 />
             </div>
 
