@@ -32,9 +32,9 @@ const ProjectCard = ({ project, className, isHovered }) => {
 
             {/* Static Image Background */}
             <div className={`absolute inset-0 z-0 transition-opacity duration-500 ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
-                <img 
-                    src={project.image} 
-                    alt={project.title} 
+                <img
+                    src={project.image}
+                    alt={project.title}
                     className="w-full h-full object-cover"
                 />
             </div>
@@ -43,7 +43,7 @@ const ProjectCard = ({ project, className, isHovered }) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80" />
 
             {/* Content */}
-            <a 
+            <a
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -117,9 +117,9 @@ export default function ProjectsCarousel({ onViewAllClick }) {
     };
 
     return (
-        <div className="bg-white py-20 px-6 md:px-12">
-            <div className="max-w-7xl mx-auto">
-                <div className="mb-12 flex items-end justify-between">
+        <div className="bg-white py-20 px-6 md:px-0">
+            <div className="mx-auto">
+                <div className="mb-12 md:pl-[340px] flex items-end justify-between">
                     <div>
                         <h2 className="text-5xl md:text-7xl font-black text-gray-900 tracking-tight mb-4">
                             SELECTED WORK
@@ -128,28 +128,29 @@ export default function ProjectsCarousel({ onViewAllClick }) {
                     </div>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-2 h-[800px] md:h-[600px]">
+                <div className="flex flex-col md:flex-row h-[800px] md:h-[85vh]">
                     {/* Project Columns */}
                     {projects.map((project, index) => (
-                        <motion.div 
+                        <motion.div
                             key={project.id}
-                            className="relative overflow-hidden rounded-2xl"
+                            className="relative border-r-2 overflow-hidden"
                             initial={false}
                             animate={{ flex: getFlexValue(index) }}
                             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
                             onMouseEnter={() => { setHoveredCol(index); setCursorType('hover'); }}
                             onMouseLeave={() => { setHoveredCol(null); setCursorType('default'); }}
                         >
-                            <ProjectCard 
-                                project={project} 
+                            <ProjectCard
+                                project={project}
                                 isHovered={hoveredCol === index}
                             />
                         </motion.div>
                     ))}
 
+
                     {/* View All Column */}
-                    <motion.div 
-                        className="relative overflow-hidden rounded-2xl bg-gray-100 border border-gray-200 cursor-pointer group"
+                    <motion.div
+                        className="relative overflow-hidden bg-gray-100 border border-gray-200 cursor-pointer group"
                         initial={false}
                         animate={{ flex: getFlexValue(3) }}
                         transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
@@ -165,7 +166,7 @@ export default function ProjectsCarousel({ onViewAllClick }) {
                                 </span>
                                 <div className="w-12 h-px bg-gray-900"></div>
                             </div>
-                            
+
                             <div className={`absolute bottom-8 transition-all duration-300 ${hoveredCol === 3 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                                 <div className="bg-gray-900 text-white rounded-full p-3">
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
